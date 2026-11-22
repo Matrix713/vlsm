@@ -13,4 +13,6 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "VLSM-Wear"
+include(":common")
 include(":app")
+include(":nettools")

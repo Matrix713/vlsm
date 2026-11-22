@@ -16,13 +16,19 @@ jobs:
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
       - name: Testy i budowanie
-        run: ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleRelease
+        run: ./gradlew --no-daemon testDebugUnitTest :app:assembleRelease :nettools:assembleRelease
       - uses: actions/upload-artifact@v4
         with:
           name: vlsm-wear-apk
           path: app/build/outputs/apk/release/app-release.apk
       - uses: actions/upload-artifact@v4
+        with:
+          name: nettools-apk
+          path: nettools/build/outputs/apk/release/nettools-release.apk
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: zrzuty-ekranow
-          path: app/build/screenshots/
+          path: |
+            app/build/screenshots/
+            nettools/build/screenshots/

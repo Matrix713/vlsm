@@ -1,4 +1,10 @@
-# VLSM na Wear OS ⌚
+# VLSM + NetTools na Wear OS ⌚
+
+Dwie natywne aplikacje na zegarek (Galaxy Watch 4 Classic i nowsze):
+
+- **VLSM** – kalkulator podsieci (opis poniżej),
+- **NetTools** – ściąga komend Cisco IOS po polsku + narzędzia sieciowe ([opis](#nettools)).
+
 
 Natywna aplikacja (Kotlin + Jetpack Compose for Wear OS) do liczenia sieci **VLSM** i innych
 obliczeń IPv4 – zaprojektowana pod **Samsung Galaxy Watch 4 Classic** (okrągły ekran, obrotowy bezel).
@@ -41,7 +47,7 @@ Działa samodzielnie, bez telefonu i bez internetu.
 
 ## Instalacja na Galaxy Watch 4 Classic
 
-Gotowy plik APK: zakładka **Actions** → ostatni build → artefakt `vlsm-wear-apk`
+Gotowe pliki APK: zakładka **Actions** → ostatni build → artefakty `vlsm-wear-apk` i `nettools-apk`
 (albo zbuduj sam – patrz niżej).
 
 1. Na zegarku: **Ustawienia → Informacje o zegarku → Oprogramowanie** → 7× dotknij
@@ -59,27 +65,68 @@ Gotowy plik APK: zakładka **Actions** → ostatni build → artefakt `vlsm-wear
 4. Zainstaluj:
    ```bash
    adb install -r app-release.apk
+   adb install -r nettools-release.apk
    ```
-5. Aplikacja **VLSM** pojawi się na liście aplikacji zegarka.
+5. Aplikacje **VLSM** i **NetTools** pojawią się na liście aplikacji zegarka.
+
+## NetTools
+
+| Menu | Kategorie | Komenda | Gotowa konfiguracja |
+|---|---|---|---|
+| ![](docs/nettools/01_home.png) | ![](docs/nettools/02_categories.png) | ![](docs/nettools/04_command.png) | ![](docs/nettools/05_template.png) |
+| **Szukanie skrótami** | **Generator** | **Ping** | **Skaner LAN** |
+| ![](docs/nettools/06_search.png) | ![](docs/nettools/07_generator.png) | ![](docs/nettools/09_ping.png) | ![](docs/nettools/12_lan.png) |
+
+### Komendy Cisco IOS (offline)
+
+Ponad 300 poleceń w 21 kategoriach: podstawy i tryby, show/diagnostyka, interfejsy, DHCP/DNS,
+routing statyczny, OSPF, EIGRP, BGP, VLAN i trunk, routing między VLAN, STP, EtherChannel, ACL,
+NAT/PAT, hasła i SSH, bezpieczeństwo L2 (port-security, DHCP snooping, DAI), HSRP/VRRP,
+NTP/Syslog/SNMP/CDP/LLDP, IPv6, pliki i IOS oraz **gotowe konfiguracje** (SSH, router-on-a-stick,
+SVI, DHCP, PAT, OSPF, bezpieczny port access, trunk, LACP, HSRP, odzyskiwanie hasła).
+
+Każda komenda ma tryb (prompt, np. `(config-if)#`), opis po polsku, przykład i wskazówki.
+
+- **Szukanie** klawiaturą lub głosem – rozumie skróty CLI (`sh ip int br`, `conf t`) i polskie opisy
+  bez ogonków („trasa domyslna”).
+- **Ulubione** – gwiazdka przy komendzie.
+- **Generator komend** – wpisujesz sieć (np. `192.168.10.0/24`), dostajesz gotowe linie:
+  `ip address`, OSPF/EIGRP z wildcard, ACL (z `host`/`any`), pulę DHCP, PAT, `ip route`, BGP, prefix-list.
+
+### Narzędzia sieciowe
+
+- **Moja sieć** – typ połączenia, SSID, sygnał, IP/maska, brama, DNS, IPv6, przełącznik **„Wymuś Wi-Fi”**.
+- **Ping** – ICMP (systemowy ping z TTL) lub TCP (czas połączenia z portem), statystyki i wykres RTT.
+- **Skaner portów** – popularne, sprzęt sieciowy (SSH, Telnet, SNMP, BGP, NETCONF…), WWW, 1–1024 lub jeden port.
+- **DNS lookup** – rekordy A/AAAA i odwrotne PTR.
+- **Skaner LAN** – wykrywa urządzenia w sieci Wi-Fi (do /24), pokazuje bramę, nazwy i otwarte porty;
+  dotknięcie hosta → ping / porty / PTR.
+- **Wake-on-LAN** – budzenie komputerów (MAC w każdym formacie, także Cisco `aabb.ccdd.eeff`).
+
+> Zegarek połączony z telefonem korzysta z internetu telefonu (Bluetooth). Narzędzia LAN same
+> włączają Wi-Fi i przypinają do niego aplikację; Wi-Fi musi być włączone w ustawieniach zegarka.
 
 ## Budowanie
 
 Wymagania: JDK 17+, Android SDK (platforma 35).
 
 ```bash
-./gradlew :app:assembleRelease      # APK: app/build/outputs/apk/release/app-release.apk
-./gradlew :app:testDebugUnitTest    # testy logiki + renderowanie wszystkich ekranów (Robolectric)
+./gradlew :app:assembleRelease       # VLSM:     app/build/outputs/apk/release/app-release.apk
+./gradlew :nettools:assembleRelease  # NetTools: nettools/build/outputs/apk/release/nettools-release.apk
+./gradlew testDebugUnitTest          # testy logiki + renderowanie wszystkich ekranów (Robolectric)
 ```
 
-Zrzuty ekranów z testów trafiają do `app/build/screenshots/`.
+Zrzuty ekranów z testów trafiają do `app/build/screenshots/` i `nettools/build/screenshots/`.
 
 ## Struktura
 
 ```
-app/src/main/java/pl/vlsmcalc/wear/
-├── core/         # czysta logika IPv4: Ip, Cidr, VLSM, FLSM, sumaryzacja (bez zależności od Androida)
-├── data/         # zapis stanu i projektów (SharedPreferences/JSON)
-└── ui/           # ekrany Compose for Wear OS, klawiatura, stepper z bezelem, nawigacja
+common/     # wspólne: logika IPv4 (Ip, Cidr, VLSM, FLSM, sumaryzacja), motyw, klawiatura IP, bezel
+app/        # aplikacja VLSM: ekrany, zapis projektów
+nettools/   # aplikacja NetTools
+├── ios/    # baza komend Cisco IOS, wyszukiwarka skrótów, generator komend
+├── net/    # sondy TCP, skaner, ping, MAC/Wake-on-LAN, wybór sieci Wi-Fi
+└── ui/     # ekrany
 ```
 
 Min. Wear OS 3 (API 30) – Galaxy Watch 4 i nowsze.

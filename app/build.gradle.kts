@@ -50,18 +50,7 @@ android {
 }
 
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
-    implementation(composeBom)
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.material:material-icons-core")
-    implementation("androidx.activity:activity-compose:1.9.3")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-
-    val wearCompose = "1.4.0"
-    implementation("androidx.wear.compose:compose-material:$wearCompose")
-    implementation("androidx.wear.compose:compose-foundation:$wearCompose")
-    implementation("androidx.wear.compose:compose-navigation:$wearCompose")
-    implementation("androidx.wear:wear-input:1.1.0")
+    implementation(project(":common"))
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.14.1")

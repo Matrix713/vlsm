@@ -1,0 +1,431 @@
+#! Obszar 2 – Network Access (20%)
+@domain 2 | Dostęp do sieci | 20
+
+@topic vlan | VLAN
+## Podstawy
+- VLAN = osobna **domena rozgłoszeniowa** (i zwykle osobna podsieć IP)
+- Zakres: **1–4094**; normalny 1–1005, rozszerzony 1006–4094
+- VLAN 1 – domyślny, nie da się go usunąć; 1002–1005 zarezerwowane (dawne FDDI/Token Ring)
+- Port **access** – należy do jednego VLAN danych (+ opcjonalnie VLAN głosowy)
+- **Voice VLAN** – telefon IP taguje głos, PC za telefonem działa w VLAN danych
+## Konfiguracja
+> vlan 10
+>  name BIURO
+> interface fa0/1
+>  switchport mode access
+>  switchport access vlan 10
+>  switchport voice vlan 150
+## Weryfikacja
+> show vlan brief
+> show interfaces fa0/1 switchport
+## Dobre praktyki
+- Nieużywane porty: wyłącz i przypisz do nieużywanego VLAN („black hole”)
+- Nie używaj VLAN 1 dla użytkowników ani jako natywnego
+@card Jaki jest zakres normalnych VLAN? | 1–1005
+@card Czym jest VLAN z punktu widzenia L2? | Osobną domeną rozgłoszeniową.
+@card Polecenie przypisujące port do VLAN 20? | switchport access vlan 20
+@card Do czego służy voice VLAN? | Oddziela ruch telefonu IP (tagowany) od ruchu PC na tym samym porcie.
+@quiz Ile domen rozgłoszeniowych jest na switchu z 3 VLAN-ami (bez routera)?
+- 1
++ 3
+- 24
+- 0
+= Każdy VLAN to osobna domena rozgłoszeniowa.
+@quiz Których VLAN-ów nie da się usunąć? (wybierz dwie)
++ VLAN 1
++ VLAN 1002
+- VLAN 10
+- VLAN 4094
+= VLAN 1 i 1002–1005 są domyślne/zarezerwowane i nie można ich usunąć.
+@quiz Telefon IP z PC za nim, port switcha w trybie access. Jak oddzielić ruch głosu?
+- Ustawić port jako trunk ze wszystkimi VLAN
++ Skonfigurować switchport voice vlan
+- Użyć natywnego VLAN dla głosu
+- Wyłączyć CDP
+= Voice VLAN pozwala telefonowi tagować głos, a PC działa w VLAN danych portu access.
+
+@topic trunk | Trunk 802.1Q i DTP
+## 802.1Q
+- Trunk przenosi wiele VLAN jednym łączem, dodając **tag 4 B**
+- Tag: TPID 0x8100, PCP (3 b, priorytet CoS), DEI (1 b), **VID (12 b)**
+- **Natywny VLAN** – ramki bez tagu (domyślnie VLAN 1); musi być zgodny po obu stronach
+- Niezgodny natywny VLAN → ruch trafia do złego VLAN; CDP zgłasza błąd
+- ISL – stary, własnościowy protokół Cisco (enkapsuluje całą ramkę)
+## Konfiguracja
+> interface g0/1
+>  switchport trunk encapsulation dot1q
+>  switchport mode trunk
+>  switchport trunk native vlan 99
+>  switchport trunk allowed vlan 10,20,99
+- `allowed vlan add 30` – dodaje bez nadpisywania listy
+## DTP (Dynamic Trunking Protocol)
+| auto + auto | access
+| auto + desirable | trunk
+| desirable + desirable | trunk
+| trunk + auto/desirable | trunk
+| access + cokolwiek | access
+- Domyślnie (nowsze switche): **dynamic auto**
+- `switchport nonegotiate` wyłącza DTP (dobre dla bezpieczeństwa)
+> show interfaces trunk
+@card Ile bajtów dodaje tag 802.1Q? | 4 bajty
+@card Ile bitów ma pole VLAN ID? | 12 bitów (4096 wartości)
+@card Wynik DTP: dynamic auto + dynamic auto? | Port access (nie powstanie trunk).
+@card Jak wyłączyć DTP na porcie? | switchport nonegotiate (port musi być ustawiony na access lub trunk).
+@card Czym są ramki natywnego VLAN na trunku? | Ramkami bez tagu 802.1Q.
+@quiz Dwa switche mają porty w trybie dynamic auto. Jaki będzie stan łącza?
++ Access
+- Trunk
+- Err-disabled
+- Down
+= Auto tylko odpowiada na negocjację; żadna strona jej nie inicjuje, więc powstaje access.
+@quiz Co się dzieje z ramkami natywnego VLAN na trunku 802.1Q?
+- Dostają tag VLAN 1
++ Są wysyłane bez tagu
+- Są odrzucane
+- Dostają podwójny tag
+= Natywny VLAN jest przesyłany bez tagu.
+@quiz Które polecenie doda VLAN 50 do istniejącej listy dozwolonych bez jej nadpisywania?
+- switchport trunk allowed vlan 50
++ switchport trunk allowed vlan add 50
+- switchport trunk native vlan 50
+- switchport access vlan 50
+= Bez słowa add lista zostałaby zastąpiona samym VLAN 50.
+@quiz Ile bitów priorytetu (PCP/CoS) zawiera tag 802.1Q?
+- 1
++ 3
+- 6
+- 12
+= PCP ma 3 bity (wartości 0–7), używane jako CoS w QoS warstwy 2.
+
+@topic intervlan | Routing między VLAN
+## Metody
+- **Router-on-a-stick (ROAS)** – jeden fizyczny port routera jako trunk, podinterfejsy na VLAN
+> interface g0/0.10
+>  encapsulation dot1Q 10
+>  ip address 192.168.10.1 255.255.255.0
+- Natywny VLAN na podinterfejsie: `encapsulation dot1Q 99 native`
+- **SVI na switchu L3** – `interface vlan 10` + `ip routing`
+- **Routed port** – `no switchport` na switchu L3 (port L3 jak w routerze)
+- **Router z osobnym portem na każdy VLAN** – nie skaluje się
+## Stan SVI
+- SVI jest up/up, gdy: VLAN istnieje, jest aktywny i co najmniej jeden port access/trunk w VLAN jest up (STP forwarding)
+@card Co to jest router-on-a-stick? | Routing między VLAN na jednym porcie routera z podinterfejsami 802.1Q.
+@card Jakie polecenie wiąże podinterfejs z VLAN 20? | encapsulation dot1Q 20
+@card Co trzeba włączyć na switchu L3, by SVI routowały? | ip routing
+@card Kiedy SVI jest up/up? | VLAN istnieje i co najmniej jeden port w tym VLAN jest aktywny.
+@quiz Routing między VLAN w ROAS działa, ale nie dla VLAN 30. Podinterfejs g0/0.30 ma adres. Co najpewniej brakuje?
++ encapsulation dot1Q 30 na podinterfejsie lub VLAN 30 na trunku
+- ip routing na routerze
+- PortFast na trunku
+- no switchport na routerze
+= Podinterfejs musi mieć enkapsulację dot1Q z właściwym VLAN, a trunk musi przepuszczać VLAN 30.
+@quiz Które polecenie zamienia port switcha L3 na port routowany?
+- switchport mode trunk
++ no switchport
+- ip routing
+- interface vlan 1
+= no switchport wyłącza funkcje L2 na porcie, można mu nadać adres IP.
+
+@quiz Co musi być skonfigurowane na porcie switcha podłączonym do routera w ROAS?
+- switchport mode access
++ switchport mode trunk
+- no switchport
+- spanning-tree portfast trunk wystarczy bez trunku
+= Router-on-a-stick wymaga trunku 802.1Q między switchem a routerem.
+@quiz Jaka jest główna wada router-on-a-stick?
++ Cały ruch między VLAN-ami przechodzi przez jedno fizyczne łącze
+- Nie obsługuje więcej niż 2 VLAN
+- Wymaga EtherChannel
+- Nie działa z 802.1Q
+= Jedno łącze może stać się wąskim gardłem – SVI na switchu L3 skaluje się lepiej.
+
+@topic cdplldp | CDP i LLDP
+## CDP (Cisco Discovery Protocol)
+- Własnościowy Cisco, warstwa 2, domyślnie włączony
+- Ogłoszenia co **60 s**, holdtime **180 s**
+- Informuje: nazwa urządzenia, port, platforma, IP, wersja IOS, natywny VLAN, dupleks
+> show cdp neighbors [detail]
+> no cdp run          (globalnie)
+> no cdp enable       (na interfejsie)
+## LLDP (IEEE 802.1AB)
+- Otwarty standard, domyślnie **wyłączony** na Cisco IOS
+- Ogłoszenia co **30 s**, holdtime **120 s**, reinit 2 s
+> lldp run
+> lldp transmit / lldp receive   (na interfejsie)
+> show lldp neighbors [detail]
+## Bezpieczeństwo
+- Wyłącz CDP/LLDP na portach do Internetu i nieufnych – ujawniają szczegóły urządzenia
+@card Domyślny timer i holdtime CDP? | 60 s / 180 s
+@card Domyślny timer i holdtime LLDP? | 30 s / 120 s
+@card Czy LLDP jest domyślnie włączony na Cisco IOS? | Nie – włącza się poleceniem lldp run.
+@card Jaki standard IEEE definiuje LLDP? | 802.1AB
+@quiz Które polecenie pokaże adres IP sąsiedniego routera Cisco?
+- show cdp neighbors
++ show cdp neighbors detail
+- show ip interface brief
+- show interfaces status
+= Adres IP sąsiada jest w widoku detail (lub show cdp entry *).
+@quiz Sieć ma urządzenia różnych producentów. Którego protokołu wykrywania użyć?
+- CDP
++ LLDP
+- DTP
+- VTP
+= LLDP to otwarty standard IEEE obsługiwany przez wielu producentów.
+@quiz Jak wyłączyć LLDP tylko w kierunku wysyłania na interfejsie?
++ no lldp transmit
+- no lldp run
+- no cdp enable
+- lldp receive
+= no lldp transmit wyłącza wysyłanie na porcie, odbiór działa dalej.
+
+@topic etherchannel | EtherChannel
+## Idea
+- Łączy kilka fizycznych łączy w jedno logiczne (**Port-channel**)
+- STP widzi jedno łącze → wszystkie porty przekazują ruch
+- Równoważenie per przepływ (np. src-dst-ip), nie per pakiet
+- Do **8** aktywnych portów (LACP: 16, w tym 8 w gotowości)
+## Protokoły
+| LACP (802.3ad / 802.1AX) | active / passive
+| PAgP (Cisco) | desirable / auto
+| Statyczny | on (bez negocjacji)
+- LACP: active+active ✓, active+passive ✓, passive+passive ✗
+- PAgP: desirable+desirable ✓, desirable+auto ✓, auto+auto ✗
+- `on` działa tylko z `on`
+## Warunki zgodności portów
+- Ta sama prędkość i dupleks
+- Ten sam tryb (access/trunk), ten sam VLAN access / natywny / lista dozwolonych
+- Brak różnic w konfiguracji STP
+## EtherChannel L3
+> interface port-channel 1
+>  no switchport
+>  ip address 10.0.0.1 255.255.255.252
+> show etherchannel summary
+@card Tryby LACP? | active i passive
+@card Tryby PAgP? | desirable i auto
+@card Ile aktywnych portów może mieć EtherChannel? | 8
+@card Czy LACP passive + passive tworzy kanał? | Nie – żadna strona nie inicjuje negocjacji.
+@card Jak równoważony jest ruch w EtherChannel? | Per przepływ, według hasha (np. src-dst-ip/mac).
+@quiz Które kombinacje utworzą EtherChannel? (wybierz dwie)
++ active – passive
++ desirable – auto
+- passive – passive
+- auto – auto
+= Co najmniej jedna strona musi aktywnie negocjować (active w LACP, desirable w PAgP).
+@quiz Który protokół EtherChannel jest standardem IEEE?
++ LACP
+- PAgP
+- DTP
+- VTP
+= LACP to 802.3ad (obecnie 802.1AX); PAgP jest własnością Cisco.
+@quiz Port dołączony do kanału ma inny natywny VLAN niż pozostałe. Skutek?
+- Kanał działa, ale wolniej
++ Port zostanie zawieszony (suspended) i nie dołączy do kanału
+- Wszystkie porty przejdą w err-disabled
+- STP zablokuje cały kanał
+= Porty z niezgodną konfiguracją nie są łączone w kanał (flaga s w show etherchannel summary).
+
+@topic stp | STP – działanie
+## Po co
+- Zapobiega pętlom L2 (burze rozgłoszeniowe, niestabilne tablice MAC, duplikaty ramek)
+- Blokuje nadmiarowe łącza, odblokowuje je przy awarii
+## Wybory
+1. **Root bridge** – najniższy Bridge ID
+2. **Root port** (na każdym nie-root) – najniższy koszt do roota
+3. **Designated port** (na każdym segmencie) – najniższy koszt do roota
+4. Pozostałe porty → **blokowane** (alternate)
+- Remisy: niższy BID nadawcy → niższy priorytet portu → niższy numer portu
+## Bridge ID
+- **Priorytet (domyślnie 32768) + numer VLAN (extended system ID) + MAC**
+- Priorytet zmieniany w krokach **4096**
+- Wszystkie porty roota są designated
+## Koszty portów (krótkie, 802.1D)
+| 10 Mb/s | 100
+| 100 Mb/s | 19
+| 1 Gb/s | 4
+| 10 Gb/s | 2
+## Timery 802.1D
+| Hello | 2 s
+| Forward delay | 15 s
+| Max age | 20 s
+- Stany: **Blocking (20 s) → Listening (15 s) → Learning (15 s) → Forwarding**, plus Disabled
+- Zbieżność po awarii pośredniej: do 50 s
+@card Jak wybierany jest root bridge? | Najniższy Bridge ID (priorytet + VLAN + MAC).
+@card Domyślny priorytet mostu STP? | 32768 (+ numer VLAN w PVST+)
+@card Koszt STP łącza 1 Gb/s? | 4
+@card Stany portu w 802.1D? | Blocking, Listening, Learning, Forwarding (i Disabled).
+@card W jakich krokach zmienia się priorytet mostu? | Co 4096.
+@card W którym stanie STP port uczy się MAC, ale nie przekazuje ramek? | Learning
+@quiz Wszystkie switche mają domyślny priorytet. Który zostanie rootem?
+- Z najwyższym MAC
++ Z najniższym MAC
+- Z największą liczbą portów
+- Z najszybszymi łączami
+= Przy równym priorytecie decyduje najniższy adres MAC.
+@quiz Ile wynosi Bridge ID priorytetu dla VLAN 10 przy domyślnej konfiguracji PVST+?
+- 32768
++ 32778
+- 4106
+- 10
+= Priorytet 32768 + extended system ID (numer VLAN) 10 = 32778.
+@quiz Który port na switchu nie-root ma najniższy koszt ścieżki do roota?
++ Root port
+- Designated port
+- Alternate port
+- Backup port
+= Root port to najlepsza ścieżka danego switcha do root bridge.
+@quiz W którym stanie 802.1D port przetwarza BPDU, ale nie uczy się adresów MAC?
+- Blocking
++ Listening
+- Learning
+- Forwarding
+= Listening: BPDU tak, nauka MAC nie. Learning: nauka MAC bez przekazywania ramek.
+
+@quiz Ile trwa domyślnie przejście portu 802.1D z blocking do forwarding po awarii pośredniej?
+- 2 s
+- 15 s
+- 30 s
++ do 50 s
+= Max age 20 s + listening 15 s + learning 15 s.
+
+@topic rstp | RSTP i ochrona STP
+## RSTP (802.1w)
+- Szybka zbieżność (sekundy), handshake proposal/agreement
+- Stany: **Discarding, Learning, Forwarding**
+- Role: **Root, Designated, Alternate** (zapasowa droga do roota), **Backup** (zapasowy na tym samym segmencie), Disabled
+- Typy łączy: **point-to-point** (full-duplex), **shared** (half-duplex), **edge** (PortFast)
+- Cisco: **PVST+** (802.1D per VLAN), **Rapid PVST+** (802.1w per VLAN), **MST** (802.1s, grupy VLAN w instancjach)
+## Funkcje ochronne
+- **PortFast** – port do hosta od razu w forwarding (pomija listening/learning)
+- **BPDU Guard** – port z PortFast odbiera BPDU → **err-disabled**
+- **Root Guard** – odbiera lepsze BPDU → port **root-inconsistent** (blokuje), chroni pozycję roota
+- **Loop Guard** – brak BPDU na porcie root/alternate → **loop-inconsistent** zamiast przejścia w forwarding
+- **BPDU Filter** – nie wysyła/ignoruje BPDU (ryzykowne)
+> spanning-tree mode rapid-pvst
+> spanning-tree vlan 10 root primary
+> spanning-tree portfast
+> spanning-tree bpduguard enable
+@card Stany portu w RSTP? | Discarding, Learning, Forwarding
+@card Czym jest port alternate w RSTP? | Zapasowa ścieżka do roota (zablokowana), szybko zastępuje root port.
+@card Co robi BPDU Guard po odebraniu BPDU? | Przełącza port w err-disabled.
+@card Co chroni Root Guard? | Pozycję roota – port z lepszym BPDU przechodzi w root-inconsistent.
+@card Standard IEEE dla RSTP? | 802.1w
+@card Typ łącza RSTP dla portu z PortFast? | Edge
+@quiz Ktoś podłączył switch do portu z PortFast i BPDU Guard. Co się stanie?
+- Switch zostanie nowym rootem
++ Port przejdzie w stan err-disabled
+- Port przejdzie w stan learning
+- Nic, PortFast ignoruje BPDU
+= BPDU Guard wyłącza port (err-disabled) po odebraniu jakiegokolwiek BPDU.
+@quiz Która rola RSTP oznacza zapasowy port do tego samego segmentu, na którym switch ma już designated?
+- Alternate
++ Backup
+- Root
+- Edge
+= Backup – zapas dla designated portu na tym samym (współdzielonym) segmencie.
+@quiz Który mechanizm zapobiega przejęciu roli roota przez nieautoryzowany switch na porcie dostępowym w dystrybucji?
+- PortFast
++ Root Guard
+- Loop Guard
+- UplinkFast
+= Root Guard blokuje port, gdy przychodzą lepsze BPDU (próba zostania rootem).
+@quiz Które polecenie gwarantuje, że switch zostanie rootem VLAN 10?
++ spanning-tree vlan 10 root primary
+- spanning-tree vlan 10 priority 32768
+- spanning-tree portfast
+- spanning-tree vlan 10 cost 1
+= root primary ustawia priorytet 24576 lub niższy niż obecny root.
+
+@topic wlanarch | Architektury WLAN i tryby AP
+## Architektury
+- **Autonomiczne AP** – każdy konfigurowany osobno
+- **Lekkie AP + WLC** (split-MAC) – AP obsługuje funkcje czasu rzeczywistego, WLC zarządzanie, uwierzytelnianie, roaming
+- **Chmurowe** (Meraki) – zarządzanie z chmury
+- Wdrożenia WLC: unified (osobne urządzenie), cloud, embedded (w switchu), Mobility Express (w AP)
+## CAPWAP
+- Tunel AP ↔ WLC, **UDP 5246** (sterowanie, szyfrowane DTLS), **UDP 5247** (dane)
+- Ruch klienta tunelowany do WLC (tryb local)
+## Tryby lekkiego AP
+| Local | domyślny, obsługa klientów, ruch przez WLC
+| FlexConnect | lokalne przełączanie ruchu w oddziale, działa przy utracie WLC
+| Monitor | tylko nasłuch (IDS, rogue, lokalizacja)
+| Sniffer | przechwytuje ruch do analizatora (Wireshark)
+| Rogue detector | wykrywa obce AP po stronie przewodowej
+| SE-Connect | analiza widma RF
+| Bridge / Mesh | łącza między AP
+## Fizyczne podłączenie
+- AP w trybie local → **port access**; FlexConnect (wiele VLAN) → **trunk**
+- WLC → trunk; agregacja **LAG** = EtherChannel w trybie **on** (bez LACP/PAgP)
+- Porty WLC: service port (OOB), distribution system port (dane), redundancy port; interfejsy: management, dynamic (VLAN dla WLAN), virtual
+@card Porty CAPWAP? | UDP 5246 – sterowanie (DTLS), UDP 5247 – dane.
+@card Który tryb AP działa dalej przy utracie łączności z WLC? | FlexConnect
+@card Do jakiego portu podłącza się AP w trybie local? | Do portu access.
+@card W jakim trybie EtherChannel działa LAG na WLC? | on (statyczny, bez negocjacji).
+@card Czym jest architektura split-MAC? | Podział funkcji: AP – czas rzeczywisty (RF, ramki), WLC – zarządzanie i polityki.
+@quiz Oddział ma słabe łącze WAN. Ruch klientów ma być przełączany lokalnie. Który tryb AP?
+- Local
++ FlexConnect
+- Monitor
+- Sniffer
+= FlexConnect pozwala na lokalne przełączanie i działa nawet bez połączenia z WLC.
+@quiz Który port UDP przenosi komunikaty sterujące CAPWAP?
++ 5246
+- 5247
+- 1812
+- 4500
+= 5246 – control (szyfrowany DTLS), 5247 – data.
+@quiz Który tryb AP przechwytuje ramki i przesyła je do zewnętrznego analizatora?
+- Monitor
++ Sniffer
+- SE-Connect
+- Rogue detector
+= Sniffer wysyła przechwycony ruch 802.11 np. do Wiresharka.
+@quiz Jak skonfigurować porty switcha dla LAG z WLC?
+- channel-group 1 mode active
+- channel-group 1 mode desirable
++ channel-group 1 mode on
+- channel-group 1 mode passive
+= WLC nie obsługuje LACP ani PAgP – kanał musi być statyczny (on).
+
+@topic mgmt | Dostęp do zarządzania urządzeniami
+## Metody
+- **Konsola** – lokalnie, kabel konsolowy (RJ-45/USB), out-of-band
+- **Telnet** – TCP 23, **nieszyfrowany**
+- **SSH** – TCP 22, szyfrowany, wersja 2 zalecana
+- **HTTP/HTTPS** – GUI (np. WLC), 80/443
+- **AUX** – zdalnie przez modem (historycznie)
+- **TACACS+ / RADIUS** – centralne uwierzytelnianie administratorów
+- **Chmura** – urządzenia zarządzane przez platformę (np. Meraki)
+## Konfiguracja WLAN na WLC (GUI)
+- Utwórz WLAN: profil, **SSID**, ID, przypisz interfejs (VLAN)
+- Zakładka Security: Layer 2 = **WPA2 + PSK** (AES), wpisz hasło
+- Opcje QoS (Platinum = głos, Gold = wideo, Silver = best effort, Bronze = tło)
+- Włącz WLAN (Status: Enabled)
+@card Który port i protokół używa SSH? | TCP 22
+@card Dlaczego nie używać Telnetu? | Przesyła wszystko, łącznie z hasłami, otwartym tekstem.
+@card Profil QoS WLC dla głosu? | Platinum
+@card Gdzie w GUI WLC wybiera się WPA2-PSK? | WLAN → Security → Layer 2
+@quiz Który protokół zarządzania szyfruje sesję CLI?
+- Telnet
++ SSH
+- HTTP
+- TFTP
+= SSH szyfruje całą sesję; Telnet i HTTP przesyłają dane jawnym tekstem.
+@quiz Który poziom QoS na WLC jest właściwy dla WLAN z telefonami VoIP?
++ Platinum
+- Gold
+- Silver
+- Bronze
+= Platinum to profil dla głosu, Gold – wideo, Silver – domyślny best effort, Bronze – tło.
+
+@quiz Który sposób zarządzania jest out-of-band?
++ Port konsolowy
+- SSH przez sieć produkcyjną
+- Telnet
+- HTTPS do WLC przez VLAN użytkowników
+= Konsola nie korzysta z sieci produkcyjnej – to dostęp out-of-band.
+@quiz Administrator chce centralnie uwierzytelniać logowania do 200 switchy. Co zastosować?
+- Konto lokalne na każdym switchu
++ Serwer AAA (TACACS+ lub RADIUS)
+- Hasło na linii konsoli
+- Wspólne enable password
+= Centralne AAA upraszcza zarządzanie kontami i daje rozliczalność.

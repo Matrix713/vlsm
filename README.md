@@ -1,9 +1,10 @@
-# VLSM + NetTools na Wear OS ⌚
+# VLSM + NetTools + CCNA na Wear OS ⌚
 
-Dwie natywne aplikacje na zegarek (Galaxy Watch 4 Classic i nowsze):
+Trzy natywne aplikacje na zegarek (Galaxy Watch 4 Classic i nowsze):
 
 - **VLSM** – kalkulator podsieci (opis poniżej),
-- **NetTools** – ściąga komend Cisco IOS po polsku + narzędzia sieciowe ([opis](#nettools)).
+- **NetTools** – ściąga komend Cisco IOS po polsku + narzędzia sieciowe ([opis](#nettools)),
+- **CCNA** – nauka do egzaminu CCNA 200-301: teoria, fiszki, quizy, egzaminy próbne ([opis](#ccna)).
 
 
 Natywna aplikacja (Kotlin + Jetpack Compose for Wear OS) do liczenia sieci **VLSM** i innych
@@ -47,7 +48,7 @@ Działa samodzielnie, bez telefonu i bez internetu.
 
 ## Instalacja na Galaxy Watch 4 Classic
 
-Gotowe pliki APK: zakładka **Actions** → ostatni build → artefakty `vlsm-wear-apk` i `nettools-apk`
+Gotowe pliki APK: zakładka **Actions** → ostatni build → artefakty `vlsm-wear-apk`, `nettools-apk` i `ccna-apk`
 (albo zbuduj sam – patrz niżej).
 
 1. Na zegarku: **Ustawienia → Informacje o zegarku → Oprogramowanie** → 7× dotknij
@@ -66,8 +67,10 @@ Gotowe pliki APK: zakładka **Actions** → ostatni build → artefakty `vlsm-we
    ```bash
    adb install -r app-release.apk
    adb install -r nettools-release.apk
+   adb install -r ccna-release.apk
    ```
-5. Aplikacje **VLSM** i **NetTools** pojawią się na liście aplikacji zegarka.
+   Przy błędzie „more than one device/emulator” sprawdź `adb devices` i dodaj `-s <urządzenie>`.
+5. Aplikacje **VLSM**, **NetTools** i **CCNA** pojawią się na liście aplikacji zegarka.
 
 ## NetTools
 
@@ -106,6 +109,37 @@ Każda komenda ma tryb (prompt, np. `(config-if)#`), opis po polsku, przykład i
 > Zegarek połączony z telefonem korzysta z internetu telefonu (Bluetooth). Narzędzia LAN same
 > włączają Wi-Fi i przypinają do niego aplikację; Wi-Fi musi być włączone w ustawieniach zegarka.
 
+## CCNA
+
+| Menu | Teoria (IPsec) | Fiszka | Quiz z wyjaśnieniem |
+|---|---|---|---|
+| ![](docs/ccna/01_home.png) | ![](docs/ccna/04_topic_ipsec.png) | ![](docs/ccna/08_flash_back.png) | ![](docs/ccna/10_quiz_answered.png) |
+| **Egzamin próbny** | **Wynik** | **Przegląd błędów** | **Postęp** |
+| ![](docs/ccna/11_exam_question.png) | ![](docs/ccna/12_result.png) | ![](docs/ccna/13_review.png) | ![](docs/ccna/15_progress.png) |
+
+Materiał według programu **CCNA 200-301 v1.1**, po polsku, offline:
+
+| Obszar | Waga | Zawartość |
+|---|---|---|
+| Podstawy sieci | 20% | OSI/TCP-IP, urządzenia, architektury (spine-leaf), WAN, chmura i wirtualizacja, kable, TCP/UDP, IPv4, IPv6, przełączanie, Wi-Fi |
+| Dostęp do sieci | 20% | VLAN, trunk/DTP, routing między VLAN, CDP/LLDP, EtherChannel, STP/RSTP, architektury WLAN i tryby AP, zarządzanie |
+| Łączność IP | 25% | tablica routingu, wybór trasy, routing statyczny, OSPFv2, DR/BDR, FHRP, zadania praktyczne |
+| Usługi IP | 10% | NAT/PAT, NTP, DHCP/DNS, SNMP, Syslog, QoS, SSH/TFTP/FTP |
+| Bezpieczeństwo i **VPN** | 15% | CIA, ataki, MFA, **kryptografia, rodzaje VPN, IPsec (AH/ESP, tryby), IKEv1/IKEv2, konfiguracja IPsec, GRE/VTI/DMVPN, SSL/TLS VPN, MPLS VPN i SD-WAN**, ACL, bezpieczeństwo L2, AAA/802.1X, WPA2/WPA3 |
+| Automatyzacja | 10% | płaszczyzny i SDN, Catalyst Center, REST, JSON, Ansible/Puppet/Chef/Terraform, AI/ML |
+| Ściągawki | – | porty, AD, timery, multicasty, maski, kody Syslog/DSCP/HTTP |
+
+- **Teoria** – ponad 60 tematów z tabelami i przykładami poleceń; „oznacz jako przeczytane”.
+- **Fiszki** – ponad 300, powtórki metodą Leitnera (najsłabiej znane najpierw).
+- **Quiz** – ponad 240 pytań z wyjaśnieniami, także wielokrotnego wyboru; „Powtórz błędy”.
+- **Egzamin próbny** – 20/40/60 pytań losowanych według wag obszarów, wynik per obszar i przegląd błędów.
+- **Postęp i gotowość**, wyszukiwarka w teorii.
+
+Treść jest w zwykłych plikach tekstowych (`ccna/src/main/assets/ccna/*.txt`) – łatwo ją poprawiać i
+rozszerzać; testy pilnują poprawności formatu (np. czy pytanie „wybierz dwie” ma dwie poprawne odpowiedzi).
+
+> Aplikacja służy do nauki. Na egzaminie w centrum Pearson VUE zegarek trzeba zostawić w szafce.
+
 ## Budowanie
 
 Wymagania: JDK 17+, Android SDK (platforma 35).
@@ -113,16 +147,18 @@ Wymagania: JDK 17+, Android SDK (platforma 35).
 ```bash
 ./gradlew :app:assembleRelease       # VLSM:     app/build/outputs/apk/release/app-release.apk
 ./gradlew :nettools:assembleRelease  # NetTools: nettools/build/outputs/apk/release/nettools-release.apk
+./gradlew :ccna:assembleRelease      # CCNA:     ccna/build/outputs/apk/release/ccna-release.apk
 ./gradlew testDebugUnitTest          # testy logiki + renderowanie wszystkich ekranów (Robolectric)
 ```
 
-Zrzuty ekranów z testów trafiają do `app/build/screenshots/` i `nettools/build/screenshots/`.
+Zrzuty ekranów z testów trafiają do `*/build/screenshots/`.
 
 ## Struktura
 
 ```
 common/     # wspólne: logika IPv4 (Ip, Cidr, VLSM, FLSM, sumaryzacja), motyw, klawiatura IP, bezel
 app/        # aplikacja VLSM: ekrany, zapis projektów
+ccna/       # aplikacja CCNA: treść w assets/, parser, silnik nauki (Leitner, egzamin wg wag)
 nettools/   # aplikacja NetTools
 ├── ios/    # baza komend Cisco IOS, wyszukiwarka skrótów, generator komend
 ├── net/    # sondy TCP, skaner, ping, MAC/Wake-on-LAN, wybór sieci Wi-Fi

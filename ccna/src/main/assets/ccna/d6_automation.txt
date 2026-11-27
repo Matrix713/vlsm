@@ -1,0 +1,274 @@
+#! Obszar 6 – Automation and Programmability (10%)
+@domain 6 | Automatyzacja i programowalność | 10
+
+@topic planes | Płaszczyzny i SDN
+## Płaszczyzny urządzenia
+| Danych (data/forwarding) | przekazywanie pakietów, ramek, ACL, NAT, szyfrowanie
+| Sterowania (control) | budowanie tablic: OSPF, STP, ARP, CDP
+| Zarządzania (management) | dostęp do urządzenia: SSH, SNMP, Syslog, NTP
+## Sieć tradycyjna vs kontrolerowa
+- Tradycyjnie: każde urządzenie ma **rozproszoną** płaszczyznę sterowania i konfiguruje się je osobno (CLI)
+- **SDN**: płaszczyzna sterowania (częściowo) **scentralizowana w kontrolerze**, urządzenia wykonują przekazywanie
+- Zalety: spójna konfiguracja, automatyzacja, szybsze wdrożenia, mniej błędów ludzkich, widoczność całej sieci
+## API kontrolera
+- **Northbound (NBI)** – między kontrolerem a aplikacjami/skryptami; zwykle **REST API**
+- **Southbound (SBI)** – między kontrolerem a urządzeniami: **OpenFlow, NETCONF, RESTCONF, OpFlex**, CLI (SSH), SNMP
+## Overlay, underlay, fabric
+- **Underlay** – fizyczna sieć i routing zapewniające łączność (np. IS-IS)
+- **Overlay** – wirtualne tunele/sieci nad underlay (np. VXLAN)
+- **Fabric** – całość underlay + overlay zarządzana jako jedna sieć
+@card Do której płaszczyzny należy OSPF? | Sterowania (control plane).
+@card Do której płaszczyzny należy SSH do routera? | Zarządzania (management plane).
+@card Co robi northbound API? | Łączy kontroler z aplikacjami i skryptami (zwykle REST).
+@card Przykłady southbound API? | OpenFlow, NETCONF, RESTCONF, OpFlex, CLI/SNMP.
+@card Czym jest underlay? | Fizyczna sieć z routingiem, nad którą działa overlay.
+@card Główna różnica SDN względem sieci tradycyjnej? | Scentralizowana płaszczyzna sterowania w kontrolerze.
+@quiz Które zadanie należy do płaszczyzny danych?
+- Wymiana LSA OSPF
++ Przekazanie ramki na podstawie tablicy MAC
+- Logowanie przez SSH
+- Wysyłanie trapów SNMP
+= Płaszczyzna danych przekazuje ruch; budowanie tablic to sterowanie, a SSH/SNMP to zarządzanie.
+@quiz Skrypt Pythona komunikuje się z kontrolerem przez REST. Jaki to interfejs?
++ Northbound API
+- Southbound API
+- Eastbound API
+- Underlay
+= Aplikacje „nad” kontrolerem używają NBI.
+@quiz Która technologia jest przykładem southbound API? (wybierz dwie)
++ NETCONF
++ OpenFlow
+- JSON
+- Ansible
+= NETCONF i OpenFlow służą kontrolerowi do komunikacji z urządzeniami.
+
+@topic catalyst | Catalyst Center i SD-Access
+## Cisco Catalyst Center (dawniej DNA Center)
+- Kontroler sieci kampusowej, **intent-based networking** (IBN) – administrator definiuje cel, system tłumaczy go na konfigurację
+- Funkcje: automatyzacja wdrożeń (PnP), zarządzanie politykami, aktualizacje oprogramowania, **assurance** (analiza stanu, wykrywanie problemów), REST API
+## Porównanie z tradycyjnym zarządzaniem
+| Tradycyjne | urządzenie po urządzeniu, CLI, ręczne zmiany, brak centralnego obrazu
+| Catalyst Center | centralne polityki, automatyzacja, analityka, szybsze rozwiązywanie problemów
+## SD-Access
+- Fabric kampusowy zarządzany przez Catalyst Center
+- **Underlay**: routing IS-IS; **overlay** – płaszczyzna danych **VXLAN**, płaszczyzna sterowania **LISP**, polityki **Cisco TrustSec (SGT)**
+- Role: **edge node** (dostęp), **border node** (wyjście z fabric), **control plane node** (LISP)
+@card Jak dawniej nazywał się Catalyst Center? | Cisco DNA Center
+@card Czym jest intent-based networking? | Administrator określa cel (intencję), system automatycznie tworzy konfigurację i weryfikuje jej działanie.
+@card Jaki protokół danych używa overlay SD-Access? | VXLAN
+@card Jaki protokół sterowania używa SD-Access? | LISP
+@card Jak SD-Access egzekwuje polityki? | Cisco TrustSec – grupy SGT.
+@quiz Która zaleta Catalyst Center względem tradycyjnego zarządzania jest prawdziwa?
++ Centralne zarządzanie politykami i automatyczne wdrożenia
+- Wymaga konfigurowania każdego urządzenia osobno przez konsolę
+- Eliminuje potrzebę płaszczyzny danych
+- Działa tylko z routerami innych producentów
+= Catalyst Center centralizuje polityki, automatyzację i analizę (assurance).
+@quiz Który protokół pełni rolę płaszczyzny sterowania w overlay SD-Access?
+- OSPF
++ LISP
+- VXLAN
+- STP
+= LISP mapuje identyfikatory urządzeń na lokalizacje; VXLAN przenosi dane.
+
+@quiz Która funkcja Catalyst Center analizuje stan sieci i pomaga szybko znaleźć przyczynę problemu?
+- PnP
++ Assurance
+- VTP
+- LISP
+= Assurance zbiera telemetrię i wskazuje problemy oraz ich przyczyny.
+@quiz Jakiego interfejsu używa zewnętrzny skrypt do pobierania danych z Catalyst Center?
++ REST API (northbound)
+- OpenFlow
+- CDP
+- Telnet
+= Catalyst Center udostępnia aplikacjom REST API.
+
+@topic rest | REST API
+## Cechy REST
+- Architektura klient–serwer, **bezstanowa (stateless)**, buforowalna (cacheable), jednolity interfejs, warstwowa
+- Zasób wskazywany przez **URI**, dane zwykle w **JSON**
+- Uwierzytelnianie: tokeny, klucze API, Basic, OAuth
+## Metody HTTP i CRUD
+| POST | Create – utwórz
+| GET | Read – odczytaj
+| PUT | Update – zastąp
+| PATCH | Update – zmień częściowo
+| DELETE | Delete – usuń
+## Kody odpowiedzi
+| 200 OK | sukces
+| 201 Created | utworzono zasób
+| 204 No Content | sukces bez treści
+| 400 Bad Request | błędne żądanie
+| 401 Unauthorized | brak/zły login
+| 403 Forbidden | brak uprawnień
+| 404 Not Found | brak zasobu
+| 500 Internal Server Error | błąd serwera
+- 2xx sukces, 3xx przekierowanie, 4xx błąd klienta, 5xx błąd serwera
+## NETCONF i RESTCONF
+- Modele danych **YANG**
+- **NETCONF**: SSH, port **830**, XML
+- **RESTCONF**: HTTPS, JSON lub XML
+@card Która metoda HTTP odpowiada operacji Read? | GET
+@card Która metoda HTTP tworzy zasób? | POST
+@card Różnica PUT vs PATCH? | PUT zastępuje cały zasób, PATCH zmienia jego część.
+@card Co oznacza kod 401? | Unauthorized – brak lub błędne uwierzytelnienie.
+@card Co oznacza kod 404? | Not Found – zasób nie istnieje.
+@card Co znaczy, że REST jest bezstanowy? | Każde żądanie zawiera wszystkie potrzebne informacje; serwer nie pamięta sesji.
+@card Port NETCONF? | TCP 830 (przez SSH).
+@quiz Która metoda HTTP służy do usunięcia zasobu?
+- POST
+- PUT
++ DELETE
+- GET
+= DELETE odpowiada operacji Delete w CRUD.
+@quiz Odpowiedź API ma kod 201. Co to oznacza?
++ Zasób został utworzony
+- Brak uprawnień
+- Błąd serwera
+- Zasób nie istnieje
+= 201 Created – typowa odpowiedź na udane POST.
+@quiz Klient wysyła żądanie z poprawnym tokenem, ale nie ma uprawnień do zasobu. Jaki kod?
+- 401
++ 403
+- 404
+- 500
+= 403 Forbidden – uwierzytelniony, ale bez uprawnień.
+@quiz Która cecha należy do architektury REST?
++ Bezstanowość
+- Wymaga stałej sesji TCP dla każdego użytkownika
+- Działa tylko z XML
+- Wymaga SNMP
+= Serwer REST nie przechowuje stanu sesji klienta.
+@quiz Jakiego języka modelowania danych używają NETCONF i RESTCONF?
+- JSON
++ YANG
+- YAML
+- HTML
+= YANG opisuje strukturę danych konfiguracyjnych i stanu.
+
+@quiz Które polecenie HTTP częściowo zmienia istniejący zasób?
+- PUT
++ PATCH
+- POST
+- GET
+= PATCH – częściowa aktualizacja; PUT zastępuje cały zasób.
+
+@topic json | JSON, XML i YAML
+## JSON
+- **Obiekt** – w nawiasach klamrowych `{ }`, zbiór par **"klucz": wartość**
+- **Tablica** – w nawiasach kwadratowych `[ ]`, uporządkowana lista wartości
+- Klucze zawsze w **podwójnych cudzysłowach**; pary rozdzielane **przecinkami**
+- Typy wartości: **string** ("tekst"), **number** (bez cudzysłowów), **boolean** (true/false), **null**, obiekt, tablica
+- Białe znaki nie mają znaczenia
+> {
+>   "hostname": "R1",
+>   "interfaces": [
+>     {"name": "Gi0/0", "enabled": true, "mtu": 1500}
+>   ],
+>   "description": null
+> }
+## XML i YAML
+- **XML** – znaczniki `<tag>wartość</tag>`, używany przez NETCONF
+- **YAML** – wcięcia zamiast nawiasów, czytelny; playbooki Ansible
+@card Czym w JSON jest { }? | Obiekt – zbiór par klucz: wartość.
+@card Czym w JSON jest [ ]? | Tablica – uporządkowana lista wartości.
+@card Jak zapisuje się klucze w JSON? | W podwójnych cudzysłowach.
+@card Jakie wartości logiczne ma JSON? | true i false (małymi literami, bez cudzysłowów).
+@card Który format używa wcięć zamiast nawiasów? | YAML
+@quiz Który zapis jest poprawnym JSON?
++ {"vlan": 10, "name": "BIURO"}
+- {vlan: 10, name: BIURO}
+- {'vlan': 10, 'name': 'BIURO'}
+- ["vlan" = 10]
+= Klucze i stringi w podwójnych cudzysłowach, para klucz: wartość, przecinki.
+@quiz Ile elementów ma tablica w {"ports": [1, 2, 3], "up": true}?
+- 2
++ 3
+- 4
+- 1
+= Tablica [1, 2, 3] zawiera trzy wartości.
+@quiz Jakiego typu jest wartość "enabled": false w JSON?
+- string
++ boolean
+- null
+- number
+= false bez cudzysłowów to wartość logiczna.
+
+@topic configmgmt | Ansible, Puppet, Chef, Terraform
+## Zarządzanie konfiguracją
+| Ansible | **bezagentowy**, **push**, SSH/API, playbooki **YAML**, napisany w Pythonie
+| Puppet | **z agentem** (lub proxy dla urządzeń sieciowych), **pull**, manifesty (Ruby DSL)
+| Chef | **z agentem**, **pull**, cookbooks i recipes (Ruby)
+| Terraform | **Infrastructure as Code**, **deklaratywny**, język HCL, plik stanu; tworzy i zmienia infrastrukturę (chmura, urządzenia)
+## Pojęcia
+- **Push** – serwer wysyła zmiany do urządzeń; **pull** – agenty same pobierają konfigurację
+- **Deklaratywny** – opisujesz stan docelowy; **imperatywny** – opisujesz kroki
+- **Idempotentność** – wielokrotne uruchomienie daje ten sam stan
+- **Configuration drift** – rozjeżdżanie się konfiguracji urządzeń w czasie; narzędzia go wykrywają i naprawiają
+- Ansible: inventory (lista hostów), playbook, moduły
+@card Które narzędzie jest bezagentowe i używa SSH? | Ansible
+@card W jakim formacie są playbooki Ansible? | YAML
+@card Czy Puppet działa w modelu push czy pull? | Pull (agent pobiera konfigurację).
+@card Do czego głównie służy Terraform? | Infrastructure as Code – deklaratywne tworzenie i zmienianie infrastruktury.
+@card Czym jest configuration drift? | Stopniowe odchodzenie konfiguracji urządzeń od wzorca.
+@quiz Które narzędzie nie wymaga instalowania agenta na zarządzanych urządzeniach?
++ Ansible
+- Puppet
+- Chef
+- Żadne z nich
+= Ansible łączy się przez SSH lub API, bez agenta.
+@quiz Które narzędzia działają w modelu pull z agentem? (wybierz dwie)
++ Puppet
++ Chef
+- Ansible
+- Terraform
+= Puppet i Chef używają agentów, które pobierają konfigurację z serwera.
+@quiz Czym charakteryzuje się podejście deklaratywne?
++ Opisujesz pożądany stan końcowy, a narzędzie ustala kroki
+- Opisujesz każde polecenie po kolei
+- Wymaga ręcznej konfiguracji CLI
+- Działa tylko w modelu push
+= Terraform i Puppet są deklaratywne – definiujesz stan docelowy.
+
+@topic aiml | AI i uczenie maszynowe w sieciach
+## Rodzaje AI
+- **Predykcyjna (predictive AI)** – analizuje dane historyczne i przewiduje: anomalie, awarie, przeciążenia
+- **Generatywna (generative AI)** – tworzy nową treść: konfiguracje, skrypty, dokumentację, odpowiedzi w języku naturalnym (asystenci)
+## Uczenie maszynowe
+- **Nadzorowane (supervised)** – na oznaczonych danych (np. ruch „normalny/atak”)
+- **Nienadzorowane (unsupervised)** – szuka wzorców i anomalii bez etykiet
+- **Ze wzmocnieniem (reinforcement)** – uczy się metodą prób i nagród
+## Zastosowania w sieciach (AIOps)
+- Wykrywanie anomalii i zagrożeń, analiza przyczyn problemów
+- Prognozowanie wykorzystania łączy i awarii sprzętu
+- Automatyczna optymalizacja RF w Wi-Fi, wybór ścieżki w SD-WAN
+- Asystenci generujący konfigurację – **zawsze weryfikuj** przed wdrożeniem
+@card Czym różni się AI predykcyjna od generatywnej? | Predykcyjna przewiduje na podstawie danych; generatywna tworzy nową treść.
+@card Które uczenie korzysta z oznaczonych danych? | Nadzorowane (supervised).
+@card Przykład AI predykcyjnej w sieci? | Prognozowanie awarii lub przeciążeń, wykrywanie anomalii.
+@quiz Narzędzie analizuje historię ruchu i ostrzega o przyszłym przeciążeniu łącza. Jaki to rodzaj AI?
++ Predykcyjna
+- Generatywna
+- Reaktywna regułowa
+- Symboliczna
+= Przewidywanie zdarzeń na podstawie danych historycznych to AI predykcyjna.
+@quiz Asystent tworzy skrypt konfiguracji OSPF na podstawie opisu w języku naturalnym. To przykład:
+- uczenia nienadzorowanego
++ AI generatywnej
+- AI predykcyjnej
+- SNMP
+= Tworzenie nowej treści (konfiguracji, tekstu) to AI generatywna.
+
+@quiz System sam grupuje ruch w klastry i wykrywa nietypowe wzorce bez oznaczonych danych. To uczenie:
+- nadzorowane
++ nienadzorowane
+- ze wzmocnieniem
+- regułowe
+= Bez etykiet – uczenie nienadzorowane (unsupervised).
+@quiz Co należy zrobić z konfiguracją wygenerowaną przez asystenta AI przed wdrożeniem?
++ Zweryfikować ją i przetestować
+- Wdrożyć od razu na wszystkich urządzeniach
+- Zaszyfrować typem 7
+- Wysłać przez SNMP trap
+= AI generatywna może się mylić – zmiany trzeba sprawdzić.

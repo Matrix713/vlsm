@@ -16,3 +16,4 @@ rootProject.name = "VLSM-Wear"
 include(":common")
 include(":app")
 include(":nettools")
+include(":ccna")

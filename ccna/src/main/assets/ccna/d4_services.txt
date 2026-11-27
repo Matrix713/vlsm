@@ -1,0 +1,361 @@
+#! Obszar 4 – IP Services (10%)
+@domain 4 | Usługi IP | 10
+
+@topic nat | NAT i PAT
+## Terminy (z perspektywy routera)
+| Inside local | prywatny adres hosta wewnątrz (np. 192.168.1.10)
+| Inside global | publiczny adres reprezentujący hosta wewnątrz
+| Outside global | prawdziwy adres hosta na zewnątrz
+| Outside local | adres hosta zewnętrznego widziany od środka (zwykle = outside global)
+- „Local” = jak widać od środka, „global” = jak widać z zewnątrz
+## Rodzaje
+- **Statyczny** – 1:1, stałe mapowanie (serwery dostępne z Internetu)
+> ip nat inside source static 192.168.1.10 203.0.113.10
+- **Dynamiczny** – pula publicznych adresów, przydział z puli na czas sesji
+> ip nat pool PULA 203.0.113.10 203.0.113.20 netmask 255.255.255.0
+> ip nat inside source list 1 pool PULA
+- **PAT (NAT overload)** – wiele hostów na jednym adresie, rozróżnianie po **portach**
+> ip nat inside source list 1 interface g0/0 overload
+## Pozostałe
+- Interfejsy: `ip nat inside` / `ip nat outside`
+- ACL wskazuje, które adresy tłumaczyć
+- Brak wolnych adresów w puli dynamicznej → nowe połączenia odrzucane
+> show ip nat translations
+> show ip nat statistics
+> clear ip nat translation *
+@card Czym jest inside local? | Prywatny adres hosta wewnętrznego (przed translacją).
+@card Czym jest inside global? | Publiczny adres reprezentujący hosta wewnętrznego na zewnątrz.
+@card Jak PAT rozróżnia sesje wielu hostów na jednym adresie? | Po numerach portów.
+@card Jakie słowo w poleceniu NAT włącza PAT? | overload
+@card Który rodzaj NAT jest potrzebny, by serwer WWW był dostępny z Internetu pod stałym adresem? | Statyczny NAT (1:1).
+@quiz Host 10.0.0.5 wychodzi do Internetu jako 198.51.100.1. Jak nazywa się adres 198.51.100.1?
+- Inside local
++ Inside global
+- Outside local
+- Outside global
+= Inside global to adres, którym host wewnętrzny jest widziany z zewnątrz.
+@quiz 200 hostów korzysta z jednego publicznego adresu. Jaki to NAT?
+- Statyczny
+- Dynamiczny z pulą
++ PAT (overload)
+- NAT64
+= PAT tłumaczy wielu hostów na jeden adres, rozróżniając sesje portami.
+@quiz Który element jest wymagany na interfejsie LAN routera robiącego NAT?
++ ip nat inside
+- ip nat outside
+- ip nat pool
+- ip helper-address
+= Interfejs w stronę sieci wewnętrznej oznacza się ip nat inside.
+@quiz Pula dynamiczna ma 5 adresów, a 6. host próbuje wyjść do Internetu (bez overload). Co się stanie?
+- Dostanie adres z innej puli
++ Jego ruch nie zostanie przetłumaczony i zostanie odrzucony
+- Router włączy PAT automatycznie
+- Router zwolni najstarszą translację
+= Bez overload każdy host potrzebuje wolnego adresu z puli.
+
+@quiz Które polecenie pokaże aktywne translacje NAT?
++ show ip nat translations
+- show ip nat statistics
+- show nat table
+- show ip route nat
+= show ip nat translations wyświetla tablicę translacji.
+
+@topic ntp | NTP
+## Działanie
+- Synchronizacja czasu – kluczowa dla **logów, certyfikatów, uwierzytelniania**
+- **UDP 123**
+- **Stratum** – odległość od źródła czasu: 0 = zegar atomowy/GPS, 1 = serwer podłączony do stratum 0, … maks. **15**; 16 = niezsynchronizowany
+- Tryby: **serwer, klient, peer (symetryczny)**, broadcast
+## Konfiguracja
+> ntp server 192.168.1.5        (klient)
+> ntp master 3                  (router jako źródło, stratum 3)
+> ntp peer 10.0.0.2
+> ntp source loopback0
+> clock timezone CET 1
+> show ntp status
+> show ntp associations
+- Router zsynchronizowany z NTP może być serwerem dla innych
+@card Port NTP? | UDP 123
+@card Co oznacza stratum 1? | Serwer bezpośrednio podłączony do źródła czasu stratum 0 (np. GPS).
+@card Maksymalne poprawne stratum NTP? | 15 (16 = niezsynchronizowany).
+@card Polecenie: router jako źródło czasu NTP? | ntp master <stratum>
+@quiz Router zsynchronizował się z serwerem stratum 2. Jakie stratum ogłosi swoim klientom?
+- 2
++ 3
+- 1
+- 16
+= Każdy kolejny poziom zwiększa stratum o 1.
+@quiz Dlaczego NTP jest ważny dla bezpieczeństwa i diagnostyki?
++ Zapewnia spójne znaczniki czasu w logach i ważność certyfikatów
+- Szyfruje komunikację między routerami
+- Przydziela adresy IP
+- Wybiera trasę o najniższym opóźnieniu
+= Bez wspólnego czasu nie da się skorelować logów, a certyfikaty mogą wyglądać na nieważne.
+
+@quiz Które polecenie ustawia router jako klienta serwera NTP 10.0.0.1?
++ ntp server 10.0.0.1
+- ntp master 10.0.0.1
+- ntp peer 10.0.0.1 master
+- clock set 10.0.0.1
+= ntp server wskazuje źródło czasu; ntp master robi z routera źródło.
+@quiz Jakie stratum oznacza urządzenie niezsynchronizowane?
+- 0
+- 1
+- 15
++ 16
+= Stratum 16 oznacza brak synchronizacji.
+
+@topic dhcp | DHCP i DNS
+## DHCP – DORA
+1. **Discover** – klient, broadcast (src 0.0.0.0, dst 255.255.255.255)
+2. **Offer** – serwer proponuje adres
+3. **Request** – klient prosi o adres (broadcast – informuje też inne serwery)
+4. **Ack** – serwer potwierdza
+- **UDP 67** (serwer), **UDP 68** (klient)
+- Przedłużenie dzierżawy: w 50% czasu (T1) unicast do serwera
+- Opcje: brama (default-router), DNS, domena, czas dzierżawy
+## DHCP relay
+- Broadcast nie przechodzi przez router → `ip helper-address <serwer>` na interfejsie **od strony klientów**
+- Router zamienia broadcast na unicast do serwera i dodaje adres bramy (giaddr), by serwer wybrał pulę
+- Router jako klient: `ip address dhcp`
+## DNS
+- Tłumaczy nazwy na adresy; **UDP 53** (zapytania), TCP 53 (transfery stref, duże odpowiedzi)
+| A | nazwa → IPv4
+| AAAA | nazwa → IPv6
+| CNAME | alias
+| MX | serwer poczty
+| PTR | IP → nazwa (odwrotny)
+| NS | serwer nazw strefy
+- Router: `ip name-server`, `ip domain-lookup`, `ip host`
+@card Kolejność komunikatów DHCP? | Discover, Offer, Request, Ack (DORA)
+@card Porty DHCP? | UDP 67 serwer, UDP 68 klient.
+@card Do czego służy ip helper-address? | DHCP relay – przekazuje broadcasty DHCP jako unicast do serwera w innej sieci.
+@card Na którym interfejsie konfiguruje się ip helper-address? | Na interfejsie od strony klientów DHCP.
+@card Rekord DNS dla IPv6? | AAAA
+@card Rekord DNS dla odwrotnego tłumaczenia? | PTR
+@quiz Które komunikaty DHCP klient wysyła jako broadcast? (wybierz dwie)
++ Discover
++ Request
+- Offer
+- Ack
+= Klient nie ma jeszcze adresu, więc Discover i Request wysyła na 255.255.255.255.
+@quiz Klienci w VLAN 20 nie dostają adresów z serwera DHCP w innej sieci. Co skonfigurować?
+- ip dhcp pool na switchu L2
++ ip helper-address na SVI/podinterfejsie VLAN 20
+- ip helper-address na interfejsie w stronę serwera
+- service dhcp na kliencie
+= Relay konfiguruje się na interfejsie bramy klientów, wskazując adres serwera.
+@quiz Który rekord DNS wskazuje serwer poczty domeny?
+- CNAME
++ MX
+- PTR
+- NS
+= MX (Mail Exchanger).
+@quiz Którego protokołu transportowego DNS używa do typowych zapytań?
++ UDP 53
+- TCP 80
+- UDP 69
+- TCP 443
+= Zwykłe zapytania DNS idą po UDP 53; TCP 53 stosuje się m.in. przy transferach stref.
+
+@topic snmp | SNMP
+## Elementy
+- **Manager (NMS)** – stacja monitorująca
+- **Agent** – na urządzeniu
+- **MIB** – baza zmiennych; każdy obiekt ma **OID**
+## Komunikaty
+| Get / GetNext / GetBulk | manager odczytuje dane
+| Set | manager zmienia ustawienie
+| Trap | agent → manager, bez potwierdzenia
+| Inform | agent → manager, z potwierdzeniem
+- Agent nasłuchuje na **UDP 161**, manager odbiera trapy na **UDP 162**
+## Wersje
+| v1 / v2c | community string jawnym tekstem (RO / RW)
+| v3 | uwierzytelnianie i szyfrowanie
+- Poziomy v3: **noAuthNoPriv**, **authNoPriv** (uwierzytelnianie), **authPriv** (uwierzytelnianie + szyfrowanie)
+- v2c dodał GetBulk i Inform
+> snmp-server community MONITOR ro
+> snmp-server host 10.0.0.50 version 2c MONITOR
+@card Porty SNMP? | UDP 161 (agent, zapytania), UDP 162 (trapy do managera).
+@card Różnica Trap vs Inform? | Inform jest potwierdzany przez managera, Trap nie.
+@card Która wersja SNMP szyfruje dane? | SNMPv3 (poziom authPriv).
+@card Co identyfikuje zmienną w MIB? | OID (Object Identifier).
+@quiz Która wersja i poziom SNMP zapewniają uwierzytelnianie i szyfrowanie?
+- v2c
+- v3 noAuthNoPriv
+- v3 authNoPriv
++ v3 authPriv
+= authPriv = uwierzytelnianie + prywatność (szyfrowanie).
+@quiz Którym komunikatem agent informuje managera o zdarzeniu i oczekuje potwierdzenia?
+- Trap
++ Inform
+- Set
+- GetBulk
+= Inform jest potwierdzany; Trap nie.
+@quiz Na jakim porcie agent SNMP odbiera zapytania Get?
++ UDP 161
+- UDP 162
+- TCP 161
+- UDP 514
+= Agent – UDP 161; trapy do managera – UDP 162.
+
+@topic syslog | Syslog i logowanie
+## Poziomy ważności (0 najważniejszy)
+| 0 | Emergency – system bezużyteczny
+| 1 | Alert – natychmiastowa reakcja
+| 2 | Critical
+| 3 | Error
+| 4 | Warning
+| 5 | Notification – ważne, normalne zdarzenie (np. interfejs up)
+| 6 | Informational
+| 7 | Debugging
+- Ustawienie poziomu loguje **ten poziom i wszystkie niższe numerycznie** (ważniejsze)
+- Ściągawka: **E**very **A**wesome **C**isco **E**ngineer **W**ill **N**eed **I**ce cream **D**aily
+## Format komunikatu
+> *Mar 1 10:15:02: %LINK-3-UPDOWN: Interface G0/1, changed state to up
+- **%FACILITY-SEVERITY-MNEMONIC: opis** (tu facility LINK, poziom 3)
+## Miejsca logowania
+> logging console 7
+> logging monitor          (sesje vty – plus terminal monitor)
+> logging buffered 16384
+> logging host 10.0.0.20   (serwer Syslog, UDP 514)
+> logging trap 6
+> service timestamps log datetime msec
+@card Poziom Syslog 4? | Warning
+@card Poziom Syslog 6? | Informational
+@card Poziom Syslog 0? | Emergency
+@card Port Syslog? | UDP 514
+@card Co trzeba wpisać w sesji SSH, by widzieć logi? | terminal monitor
+@card Które poziomy wysyła logging trap 4? | 0–4 (Emergency do Warning).
+@quiz Ustawiono logging trap warnings. Które komunikaty trafią na serwer?
+- Tylko poziom 4
++ Poziomy 0–4
+- Poziomy 4–7
+- Wszystkie
+= Ustawiony poziom obejmuje siebie i wszystkie ważniejsze (niższe numerycznie).
+@quiz Jaki poziom ma komunikat %LINEPROTO-5-UPDOWN?
+- 3 Error
+- 4 Warning
++ 5 Notification
+- 6 Informational
+= Cyfra po facility oznacza poziom ważności.
+@quiz Który poziom Syslog jest najmniej ważny?
+- 0
+- 5
++ 7
+- 3
+= 7 – Debugging; 0 – Emergency jest najważniejszy.
+
+@topic qos | QoS
+## Wymagania ruchu
+| Głos | opóźnienie ≤ 150 ms (w jedną stronę), jitter ≤ 30 ms, utrata ≤ 1%
+| Wideo interaktywne | opóźnienie ≤ 150–200 ms, jitter ≤ 30–50 ms, utrata ≤ 0,1–1%
+- Parametry: **pasmo, opóźnienie, jitter (zmienność opóźnienia), utrata pakietów**
+## Narzędzia
+- **Klasyfikacja** – rozpoznanie ruchu (ACL, NBAR, znaczniki)
+- **Znakowanie (marking)** – ustawienie pola w nagłówku
+- **Kolejkowanie** – kolejność wysyłania przy przeciążeniu
+- **Unikanie przeciążeń** – WRED (losowe odrzucanie, zapobiega globalnej synchronizacji TCP); tail drop = odrzucanie przy pełnej kolejce
+- **Policing** – odrzuca lub zmienia znacznik (re-mark) ruchu ponad limit, bez buforowania; zwykle na wejściu u ISP
+- **Shaping** – buforuje i opóźnia nadmiar, wygładza ruch; zwykle na wyjściu klienta
+## Znaczniki
+| CoS | 3 bity w tagu 802.1Q (L2)
+| IPP | 3 bity w polu ToS (L3, stare)
+| DSCP | 6 bitów w polu ToS/DS (L3)
+| EF (DSCP 46) | głos
+| AFxy | x = klasa 1–4, y = prawdopodobieństwo odrzucenia 1–3 (AF41 wideo)
+| CS0–CS7 | zgodne z IPP (CS0 = best effort)
+## Kolejkowanie
+- **CBWFQ** – gwarantowane pasmo dla klas
+- **LLQ** – CBWFQ + kolejka priorytetowa (dla głosu), z limitem by nie zagłodzić innych
+- **Trust boundary** – granica, od której ufamy znacznikom (np. telefon IP)
+@card Wartość DSCP dla głosu? | EF = 46
+@card Maksymalne opóźnienie w jedną stronę dla głosu? | 150 ms
+@card Różnica policing vs shaping? | Policing odrzuca nadmiar, shaping go buforuje i opóźnia.
+@card Ile bitów ma DSCP? | 6
+@card Co oznacza y w AFxy? | Prawdopodobieństwo odrzucenia (1–3, wyższe = szybciej odrzucany).
+@card Które kolejkowanie daje głosowi kolejkę ścisłego priorytetu? | LLQ
+@card Co zapobiega globalnej synchronizacji TCP? | WRED (losowe wczesne odrzucanie).
+@quiz Który mechanizm QoS opóźnia nadmiarowy ruch, zamiast go odrzucać?
+- Policing
++ Shaping
+- Marking
+- Classification
+= Shaping buforuje nadmiar i wysyła go później.
+@quiz Jaką klasę DSCP stosuje się dla ruchu głosowego?
++ EF
+- AF41
+- CS1
+- AF11
+= Expedited Forwarding (DSCP 46) dla głosu.
+@quiz Który z poniższych AF ma najwyższe prawdopodobieństwo odrzucenia w swojej klasie?
+- AF31
+- AF32
++ AF33
+- AF41
+= Druga cyfra to drop probability; AF33 > AF32 > AF31.
+@quiz Gdzie zwykle przebiega trust boundary w sieci z telefonami IP?
++ Na telefonie IP (lub porcie switcha, do którego jest podłączony)
+- Na routerze brzegowym ISP
+- Na serwerze DHCP
+- Na kontrolerze WLC
+= Ufa się znacznikom ustawionym przez telefon; znaczniki z PC są nadpisywane.
+@quiz Ile bitów ma pole CoS?
++ 3
+- 6
+- 8
+- 12
+= CoS (PCP) w tagu 802.1Q ma 3 bity.
+
+@quiz Który mechanizm odrzuca nadmiarowy ruch bez buforowania i często jest stosowany przez ISP?
++ Policing
+- Shaping
+- LLQ
+- CBWFQ
+= Policing przycina ruch ponad ustalony limit.
+
+@topic filetransfer | SSH, TFTP i FTP
+## SSH
+- Wymaga: **hostname**, **ip domain-name**, kluczy RSA, kont lokalnych lub AAA
+> crypto key generate rsa modulus 2048
+> ip ssh version 2
+> line vty 0 15
+>  login local
+>  transport input ssh
+## Transfer plików
+| TFTP | UDP 69, bez uwierzytelniania, prosty
+| FTP | TCP 21 (sterowanie) + 20 (dane), login i hasło, jawny tekst
+| SFTP / SCP | przez SSH (TCP 22), szyfrowane
+- FTP aktywny: serwer łączy się do klienta (port 20); pasywny: klient łączy się do serwera
+- Zastosowanie: kopie konfiguracji, aktualizacja obrazu IOS
+> copy running-config tftp:
+> copy tftp: flash:
+@card Port TFTP? | UDP 69
+@card Porty FTP? | TCP 21 (sterowanie), TCP 20 (dane w trybie aktywnym).
+@card Co jest potrzebne do wygenerowania kluczy RSA dla SSH? | Nazwa hosta (hostname) i ip domain-name.
+@card Czym różni się TFTP od FTP? | TFTP: UDP, bez logowania; FTP: TCP, wymaga logowania.
+@quiz Który protokół transferu plików nie wymaga uwierzytelniania i używa UDP?
++ TFTP
+- FTP
+- SFTP
+- SCP
+= TFTP (UDP 69) jest najprostszy i nie ma uwierzytelniania.
+@quiz Którego polecenia brakuje, jeśli crypto key generate rsa zwraca błąd o nazwie domeny?
+- hostname
++ ip domain-name
+- ip ssh version 2
+- login local
+= Do wygenerowania kluczy RSA potrzebna jest nazwa domeny (i nazwa hosta inna niż domyślna).
+
+@quiz Który protokół pozwala bezpiecznie skopiować plik IOS na router?
+- TFTP
+- FTP
++ SCP
+- Telnet
+= SCP działa przez SSH i szyfruje transfer.
+@quiz Który protokół przesyła login i hasło jawnym tekstem przy transferze plików?
++ FTP
+- SFTP
+- SCP
+- HTTPS
+= FTP nie szyfruje – ani danych, ani poświadczeń.

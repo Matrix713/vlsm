@@ -1,0 +1,212 @@
+#! Dział pomocniczy – liczby i tabele do zapamiętania (nie wchodzi do wag egzaminu)
+@domain 7 | Ściągawki i liczby | 0
+
+@topic ports | Porty i protokoły
+## TCP
+| 20 / 21 | FTP dane / sterowanie
+| 22 | SSH, SCP, SFTP
+| 23 | Telnet
+| 25 | SMTP
+| 49 | TACACS+
+| 80 | HTTP
+| 110 | POP3
+| 143 | IMAP
+| 179 | BGP
+| 443 | HTTPS, SSL VPN
+| 830 | NETCONF
+| 3389 | RDP
+## UDP
+| 53 | DNS (także TCP)
+| 67 / 68 | DHCP serwer / klient
+| 69 | TFTP
+| 123 | NTP
+| 161 / 162 | SNMP / trapy
+| 500 | IKE (ISAKMP)
+| 514 | Syslog
+| 1812 / 1813 | RADIUS
+| 4500 | IPsec NAT-T
+| 5246 / 5247 | CAPWAP sterowanie / dane
+## Numery protokołów IP
+| 1 | ICMP
+| 6 | TCP
+| 17 | UDP
+| 47 | GRE
+| 50 | ESP
+| 51 | AH
+| 88 | EIGRP
+| 89 | OSPF
+@card Port TACACS+? | TCP 49
+@card Port BGP? | TCP 179
+@card Port IPsec NAT-T? | UDP 4500
+@card Numer protokołu IP dla EIGRP? | 88
+@card Port HTTPS? | TCP 443
+@card Port IMAP? | TCP 143
+@quiz Który port używa Syslog?
+- UDP 161
++ UDP 514
+- TCP 49
+- UDP 123
+= Syslog – UDP 514.
+@quiz Które protokoły używają UDP? (wybierz dwie)
++ NTP
++ TFTP
+- SSH
+- BGP
+= NTP (123) i TFTP (69) działają na UDP; SSH i BGP na TCP.
+@quiz Jaki numer protokołu IP ma OSPF?
+- 88
++ 89
+- 50
+- 47
+= OSPF = 89, EIGRP = 88.
+
+@topic numbers | Najważniejsze liczby CCNA
+## Dystans administracyjny
+| 0 | podłączona
+| 1 | statyczna
+| 20 | eBGP
+| 90 | EIGRP
+| 110 | OSPF
+| 115 | IS-IS
+| 120 | RIP
+| 170 | EIGRP zewn.
+| 200 | iBGP
+| 255 | nieużywana
+## STP
+| 32768 | domyślny priorytet mostu
+| 4096 | krok priorytetu
+| 2 / 15 / 20 s | hello / forward delay / max age
+| 100 / 19 / 4 / 2 | koszt 10M / 100M / 1G / 10G
+## OSPF
+| 10 / 40 s | hello / dead (broadcast, p2p)
+| 1 | domyślny priorytet DR
+| 100 Mb/s | pasmo referencyjne
+| 224.0.0.5 / .6 | wszystkie routery / DR
+## FHRP
+| 100 | domyślny priorytet HSRP i VRRP
+| 3 / 10 s | hello / hold HSRP
+## CDP / LLDP
+| 60 / 180 s | CDP timer / holdtime
+| 30 / 120 s | LLDP timer / holdtime
+## Inne
+| 300 s | starzenie wpisu MAC
+| 4094 | najwyższy VLAN
+| 100 m | maks. długość skrętki
+| 8 | aktywnych portów EtherChannel
+| 1, 6, 11 | niezachodzące kanały 2,4 GHz
+| 15,4 / 30 W | PoE / PoE+
+@card Domyślny priorytet DR w OSPF? | 1
+@card Ile wynosi max age w STP? | 20 s
+@card Domyślny czas starzenia tablicy MAC? | 300 s
+@card Hello i hold w HSRP? | 3 s i 10 s
+@quiz Jaki jest domyślny forward delay STP?
+- 2 s
++ 15 s
+- 20 s
+- 50 s
+= Hello 2 s, forward delay 15 s, max age 20 s.
+@quiz Który dystans administracyjny ma IS-IS?
+- 110
++ 115
+- 120
+- 90
+= IS-IS – 115, między OSPF (110) a RIP (120).
+
+@topic ipv6tab | Adresy IPv6 i multicast
+## Prefiksy
+| ::/128 | nieokreślony
+| ::1/128 | loopback
+| 2000::/3 | global unicast
+| FC00::/7 | unique local
+| FE80::/10 | link-local
+| FF00::/8 | multicast
+| 2001:DB8::/32 | dokumentacja
+## Multicast IPv6
+| FF02::1 | wszystkie węzły
+| FF02::2 | wszystkie routery
+| FF02::5 | routery OSPFv3
+| FF02::6 | DR OSPFv3
+| FF02::A | routery EIGRP
+| FF02::1:2 | agenci DHCPv6
+| FF02::1:FF00:0/104 | solicited-node
+## Multicast IPv4
+| 224.0.0.1 | wszystkie hosty
+| 224.0.0.2 | wszystkie routery (HSRPv1)
+| 224.0.0.5 / .6 | OSPF / DR
+| 224.0.0.9 | RIPv2
+| 224.0.0.10 | EIGRP
+| 224.0.0.18 | VRRP
+| 224.0.0.102 | HSRPv2
+@card Multicast EIGRP dla IPv4? | 224.0.0.10
+@card Multicast EIGRP dla IPv6? | FF02::A
+@card Multicast VRRP? | 224.0.0.18
+@card Prefiks dokumentacyjny IPv6? | 2001:DB8::/32
+@quiz Na jaki adres wysyłają hello routery EIGRP w IPv4?
+- 224.0.0.5
+- 224.0.0.9
++ 224.0.0.10
+- 224.0.0.18
+= EIGRP – 224.0.0.10; OSPF – .5/.6; RIPv2 – .9; VRRP – .18.
+
+@topic maskstab | Maski, wildcard i hosty
+| /24 | 255.255.255.0 · 0.0.0.255 · 254 h
+| /25 | 255.255.255.128 · 0.0.0.127 · 126 h
+| /26 | 255.255.255.192 · 0.0.0.63 · 62 h
+| /27 | 255.255.255.224 · 0.0.0.31 · 30 h
+| /28 | 255.255.255.240 · 0.0.0.15 · 14 h
+| /29 | 255.255.255.248 · 0.0.0.7 · 6 h
+| /30 | 255.255.255.252 · 0.0.0.3 · 2 h
+| /31 | 255.255.255.254 · łącze p2p · 2 adresy
+| /32 | 255.255.255.255 · host
+| /23 | 255.255.254.0 · 0.0.1.255 · 510 h
+| /22 | 255.255.252.0 · 0.0.3.255 · 1022 h
+| /21 | 255.255.248.0 · 0.0.7.255 · 2046 h
+| /20 | 255.255.240.0 · 0.0.15.255 · 4094 h
+| /16 | 255.255.0.0 · 0.0.255.255 · 65534 h
+## Wartości oktetu maski
+| 128 192 224 240 | 1, 2, 3, 4 bity
+| 248 252 254 255 | 5, 6, 7, 8 bitów
+@card Maska /29? | 255.255.255.248 – 6 hostów
+@card Wildcard /26? | 0.0.0.63
+@card Ile hostów w /21? | 2046
+@quiz Która maska odpowiada /26?
+- 255.255.255.128
++ 255.255.255.192
+- 255.255.255.224
+- 255.255.255.240
+= /26 = 24 + 2 bity → 192.
+
+@topic codes | Kody i poziomy
+## Syslog
+| 0 Emergency | 1 Alert
+| 2 Critical | 3 Error
+| 4 Warning | 5 Notification
+| 6 Informational | 7 Debugging
+## DSCP
+| EF (46) | głos
+| AF41 (34) | wideo interaktywne
+| AF31 (26) | dane krytyczne / sygnalizacja
+| CS3 (24) | sygnalizacja głosu
+| CS0 (0) | best effort
+## HTTP
+| 200 / 201 / 204 | OK / Created / No Content
+| 400 / 401 / 403 / 404 | Bad Request / Unauthorized / Forbidden / Not Found
+| 500 | Internal Server Error
+## Wi-Fi
+| Wi-Fi 4 / 5 / 6 / 7 | 802.11n / ac / ax / be
+| WPA2 | AES-CCMP
+| WPA3 | SAE, PMF, GCMP-256
+## Hasła Cisco
+| typ 5 / 7 / 8 / 9 | MD5 / odwracalne / PBKDF2 / scrypt
+## ACL
+| 1–99, 1300–1999 | standardowe
+| 100–199, 2000–2699 | rozszerzone
+@card Wartość DSCP AF41? | 34
+@card Który standard to Wi-Fi 6? | 802.11ax
+@card Który typ hasła Cisco jest odwracalny? | Typ 7
+@quiz Jaki poziom Syslog to Critical?
+- 1
++ 2
+- 3
+- 4
+= 0 Emergency, 1 Alert, 2 Critical, 3 Error.

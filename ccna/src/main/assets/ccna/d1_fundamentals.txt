@@ -1,0 +1,597 @@
+#! Obszar 1 egzaminu CCNA 200-301 v1.1 – Network Fundamentals (20%)
+@domain 1 | Podstawy sieci | 20
+
+@topic osi | Model OSI i TCP/IP
+## Warstwy OSI (od góry)
+| 7 Aplikacji | HTTP, DNS, SSH, SMTP
+| 6 Prezentacji | kodowanie, szyfrowanie, kompresja
+| 5 Sesji | zestawianie i utrzymanie sesji
+| 4 Transportowa | TCP, UDP – **segment**
+| 3 Sieciowa | IP, ICMP, routing – **pakiet**
+| 2 Łącza danych | Ethernet, MAC, switch – **ramka**
+| 1 Fizyczna | kable, sygnał – **bity**
+## Model TCP/IP
+- Aplikacji (OSI 5–7), Transportowa (4), Internetu (3), Dostępu do sieci (1–2)
+- Część źródeł dzieli dostęp do sieci na łącza danych + fizyczną (5 warstw)
+## Enkapsulacja
+- Dane → segment (nagłówek TCP/UDP) → pakiet (nagłówek IP) → ramka (nagłówek + FCS) → bity
+- **PDU** – jednostka danych danej warstwy
+- Komunikacja tej samej warstwy między hostami = **same-layer interaction**
+- Sąsiednie warstwy na jednym hoście = **adjacent-layer interaction**
+@card Jak nazywa się PDU warstwy 2? | Ramka (frame)
+@card Jak nazywa się PDU warstwy 3? | Pakiet
+@card Jak nazywa się PDU warstwy 4 dla TCP? | Segment
+@card Które warstwy OSI odpowiadają warstwie aplikacji TCP/IP? | 5, 6 i 7 (sesji, prezentacji, aplikacji)
+@card Gdzie w ramce Ethernet jest FCS? | W stopce (trailer) – suma kontrolna CRC
+@quiz Na której warstwie OSI działa router podczas przekazywania pakietów?
+- 2 – łącza danych
++ 3 – sieciowej
+- 4 – transportowej
+- 1 – fizycznej
+= Router podejmuje decyzje na podstawie adresów IP, czyli warstwy 3.
+@quiz Jaka jest poprawna kolejność enkapsulacji przy wysyłaniu?
++ dane, segment, pakiet, ramka, bity
+- dane, pakiet, segment, ramka, bity
+- dane, ramka, pakiet, segment, bity
+- bity, ramka, pakiet, segment, dane
+= Nagłówki dodawane są od warstwy 4 w dół: segment → pakiet → ramka → bity.
+@quiz Która warstwa OSI odpowiada za szyfrowanie i formatowanie danych?
+- Sesji
++ Prezentacji
+- Transportowa
+- Aplikacji
+= Warstwa 6 (prezentacji) – kodowanie, szyfrowanie, kompresja.
+
+@topic devices | Urządzenia sieciowe i ich rola
+## Infrastruktura
+- **Router** – łączy różne sieci (L3), wybiera trasę na podstawie tablicy routingu
+- **Switch L2** – przełącza ramki w obrębie LAN po adresach MAC; każdy port to osobna domena kolizyjna
+- **Switch L3** (multilayer) – przełączanie + routing między VLAN (SVI)
+- **Access Point** – most między siecią bezprzewodową a przewodową
+- **WLC** – kontroler zarządzający wieloma lekkimi AP
+## Bezpieczeństwo
+- **Firewall** – filtruje ruch według reguł, śledzi stan połączeń (stateful)
+- **NGFW** – firewall + IPS + kontrola aplikacji (AVC) + filtrowanie URL + AMP (ochrona przed malware)
+- **IDS** – pasywny, analizuje kopię ruchu i alarmuje
+- **IPS** – inline, potrafi blokować ruch na podstawie sygnatur
+## Pozostałe
+- **Endpointy** – komputery, telefony, drukarki, IoT
+- **Serwery** – świadczą usługi (DNS, DHCP, WWW, pliki)
+- **PoE** – zasilanie przez skrętkę: PSE (switch) zasila PD (AP, telefon IP, kamerę)
+| 802.3af PoE | do 15,4 W
+| 802.3at PoE+ | do 30 W
+| 802.3bt UPOE | 60 W / 90 W
+@card Czym różni się IPS od IDS? | IPS działa inline i blokuje ruch, IDS jest pasywny i tylko alarmuje.
+@card Co dodaje NGFW względem klasycznego firewalla? | IPS, kontrolę aplikacji (AVC), filtrowanie URL, ochronę przed malware (AMP).
+@card Ile mocy daje PoE+ (802.3at)? | Do 30 W na port.
+@card Jak nazywa się urządzenie zasilające w PoE, a jak zasilane? | PSE (np. switch) zasila PD (np. AP, telefon IP).
+@quiz Które urządzenie dzieli domeny rozgłoszeniowe (broadcast)?
+- Hub
+- Switch L2 bez VLAN
++ Router
+- Access Point
+= Router nie przekazuje broadcastów między interfejsami – każdy jego interfejs to osobna domena rozgłoszeniowa.
+@quiz Które funkcje są typowe dla NGFW? (wybierz dwie)
++ Kontrola aplikacji (AVC)
++ Zintegrowany IPS
+- Przydzielanie adresów DHCP klientom Wi-Fi
+- Zarządzanie lekkimi AP przez CAPWAP
+= NGFW łączy firewall stanowy z IPS, kontrolą aplikacji, filtrowaniem URL i ochroną przed malware.
+@quiz Które urządzenie działa inline i może odrzucać złośliwe pakiety?
+- IDS
++ IPS
+- Syslog server
+- SNMP manager
+= IPS stoi na drodze ruchu (inline) i może go blokować; IDS jedynie obserwuje kopię ruchu.
+
+@topic architectures | Architektury i topologie
+## Kampus
+- **3-warstwowa**: dostęp (access) → dystrybucja → rdzeń (core). Dla dużych sieci.
+- **2-warstwowa (collapsed core)**: dystrybucja i rdzeń połączone w jedną warstwę. Dla mniejszych kampusów.
+- Warstwa dostępu: porty dla hostów, PoE, port security, VLAN
+- Dystrybucja: agregacja, routing między VLAN, polityki, granica L2/L3
+- Rdzeń: szybki transport, minimum polityk, redundancja
+## Spine-leaf (centrum danych)
+- Każdy **leaf** łączy się z **każdym spine**
+- Leaf nie łączy się z leaf, spine nie łączy się ze spine
+- Serwery podłączone tylko do leaf → przewidywalne opóźnienie (zawsze 2 skoki przez spine)
+- Skalowanie: dodaj spine (przepustowość) lub leaf (porty)
+## Inne
+- **SOHO** – małe biuro/dom: jedno urządzenie (router + switch + AP + firewall)
+- **WAN** – łączy odległe lokalizacje (opis w osobnym temacie)
+- **On-premises vs chmura** – sprzęt u siebie vs zasoby u dostawcy
+## Topologie
+- **Gwiazda** – urządzenia do centralnego punktu
+- **Pełna siatka (full mesh)** – każdy z każdym, max redundancja, liczba łączy n(n−1)/2
+- **Częściowa siatka (partial mesh)** – tylko część połączeń nadmiarowych
+@card Jakie warstwy ma model 3-warstwowy kampusu? | Dostępu (access), dystrybucji, rdzenia (core).
+@card Co to jest collapsed core? | Model 2-warstwowy: dystrybucja i rdzeń połączone w jedną warstwę.
+@card Zasada połączeń w spine-leaf? | Każdy leaf łączy się z każdym spine; brak połączeń leaf-leaf i spine-spine.
+@card Ile łączy ma pełna siatka 5 routerów? | 5·4/2 = 10
+@quiz W architekturze spine-leaf serwery podłącza się do:
+- spine
++ leaf
+- rdzenia (core)
+- dowolnego przełącznika
+= Endpointy i serwery łączą się do leaf; spine służy tylko do łączenia leafów.
+@quiz Która warstwa modelu hierarchicznego zwykle realizuje routing między VLAN i polityki?
+- Dostępu
++ Dystrybucji
+- Rdzenia
+- Fizyczna
+= Warstwa dystrybucji agreguje dostęp, jest granicą L2/L3 i stosuje polityki.
+@quiz Ile połączeń potrzeba w pełnej siatce 6 routerów?
+- 12
++ 15
+- 30
+- 6
+= n(n−1)/2 = 6·5/2 = 15.
+
+@topic wan | Sieci WAN
+## Typy połączeń
+- **Łącze dzierżawione (leased line)** – stałe łącze punkt-punkt, np. przez serial/HDLC/PPP
+- **MPLS** – sieć operatora, routing po etykietach; klient ma CE, operator PE i P
+- **Metro Ethernet** – Ethernet od operatora: **E-Line** (punkt-punkt), **E-LAN** (wiele-do-wielu), **E-Tree** (hub-and-spoke)
+- **Internet** – DSL, kablowy, światłowód (FTTH), 4G/5G, satelita – zwykle z VPN
+## Topologie WAN
+- **Point-to-point**, **hub-and-spoke**, **full mesh**, **partial mesh**
+- **Single-homed** – jedno łącze do jednego ISP
+- **Dual-homed** – dwa łącza do tego samego ISP
+- **Multihomed** – łącza do różnych ISP
+- **Dual-multihomed** – po dwa łącza do każdego z kilku ISP
+## Pojęcia
+- **CPE** – urządzenie klienta; **demarc** – punkt rozgraniczenia odpowiedzialności
+- **CE / PE / P** – router klienta / brzegowy operatora / wewnętrzny operatora (MPLS)
+@card Czym jest E-LAN w Metro Ethernet? | Usługa wiele-do-wielu – wszystkie lokalizacje w jednej sieci L2.
+@card Czym różni się dual-homed od multihomed? | Dual-homed: 2 łącza do tego samego ISP; multihomed: łącza do różnych ISP.
+@card Kto w MPLS ma router PE? | Operator – PE to jego router brzegowy, do którego łączy się CE klienta.
+@quiz Usługa Metro Ethernet typu hub-and-spoke to:
+- E-Line
+- E-LAN
++ E-Tree
+- E-Mesh
+= E-Tree – centrala może komunikować się z oddziałami, oddziały między sobą nie.
+@quiz Firma ma dwa łącza, każde do innego operatora (po jednym). To topologia:
+- single-homed
+- dual-homed
++ multihomed
+- dual-multihomed
+= Multihomed oznacza połączenie z więcej niż jednym ISP.
+
+@quiz Która usługa Metro Ethernet łączy dwie lokalizacje punkt-punkt?
++ E-Line
+- E-LAN
+- E-Tree
+- VPLS-Tree
+= E-Line to wirtualne łącze punkt-punkt (jak kabel).
+@quiz Jak nazywa się router operatora, do którego podłączony jest router klienta w MPLS?
+- P
++ PE
+- CE
+- ABR
+= CE (klient) łączy się z PE (Provider Edge); P to routery rdzenia operatora.
+@quiz Która topologia WAN zapewnia największą redundancję kosztem liczby łączy?
+- Hub-and-spoke
+- Point-to-point
++ Full mesh
+- Single-homed
+= Pełna siatka – każda lokalizacja z każdą.
+
+@topic cloud | Wirtualizacja i chmura
+## Wirtualizacja
+- **Hypervisor typu 1** (bare-metal) – bezpośrednio na sprzęcie: VMware ESXi, Hyper-V, KVM
+- **Hypervisor typu 2** (hosted) – na systemie operacyjnym: VirtualBox, VMware Workstation
+- **Maszyna wirtualna** – własny system operacyjny, wirtualne CPU/RAM/NIC
+- **vSwitch** – wirtualny przełącznik łączący VM-y z siecią fizyczną
+- **Kontenery** (Docker, orkiestracja Kubernetes) – współdzielą jądro systemu hosta, lżejsze i szybsze od VM
+- **VRF** – wiele niezależnych tablic routingu na jednym routerze; pozwala na nakładające się adresy IP
+## Chmura (NIST)
+- Cechy: samoobsługa na żądanie, szeroki dostęp przez sieć, pula zasobów, szybka elastyczność, mierzalność usług
+| IaaS | dostawca daje VM, sieć, dyski; Ty system i aplikacje
+| PaaS | dostawca daje platformę do uruchamiania kodu
+| SaaS | gotowa aplikacja (np. poczta, CRM)
+- Modele: **publiczna, prywatna, hybrydowa, społecznościowa**
+- Dostęp do chmury: Internet (z VPN), prywatne łącze WAN (MPLS), Intercloud exchange
+@card Czym jest hypervisor typu 1? | Działa bezpośrednio na sprzęcie (bare-metal), np. ESXi, Hyper-V, KVM.
+@card Czym kontener różni się od VM? | Kontener współdzieli jądro OS hosta; VM ma własny system operacyjny.
+@card Do czego służy VRF? | Wiele niezależnych tablic routingu na jednym routerze (nakładające się adresy).
+@card Co dostarcza model PaaS? | Platformę (środowisko uruchomieniowe) – klient wgrywa tylko swój kod.
+@quiz Który model chmury daje klientowi maszyny wirtualne, na których sam instaluje system?
++ IaaS
+- PaaS
+- SaaS
+- DaaS
+= IaaS – Infrastructure as a Service: dostawca daje infrastrukturę, klient zarządza OS i aplikacjami.
+@quiz Która technologia pozwala routerowi mieć osobne tablice routingu dla różnych klientów z tymi samymi adresami?
+- VLAN
++ VRF
+- HSRP
+- NAT
+= VRF (Virtual Routing and Forwarding) tworzy niezależne instancje routingu.
+@quiz Co jest cechą kontenerów w porównaniu z maszynami wirtualnymi?
+- Każdy kontener ma własne jądro systemu
++ Współdzielą jądro systemu hosta
+- Wymagają hypervisora typu 2
+- Nie mogą komunikować się przez sieć
+= Kontenery dzielą jądro OS hosta, dzięki czemu są lżejsze i szybciej startują.
+
+@quiz Która cecha chmury oznacza, że klient płaci za faktyczne zużycie?
+- Pula zasobów
++ Mierzalność usług (measured service)
+- Szeroki dostęp sieciowy
+- Samoobsługa
+= Measured service – zasoby są mierzone i rozliczane.
+
+@topic cabling | Kable, interfejsy i błędy
+## Skrętka (UTP)
+| Cat5e | 1 Gb/s, 100 m
+| Cat6 | 1 Gb/s (10 Gb/s do ~55 m)
+| Cat6a | 10 Gb/s, 100 m
+- Maksymalna długość segmentu miedzianego Ethernet: **100 m**
+- Kabel prosty: urządzenia różnego typu (PC–switch); krosowany: tego samego typu (switch–switch)
+- **Auto-MDIX** – port sam dopasowuje się do typu kabla
+## Światłowód
+- **SMF (jednomodowy)** – laser, duże odległości (km), zwykle żółty
+- **MMF (wielomodowy)** – LED/VCSEL, krótsze odległości, pomarańczowy/turkusowy
+- Odporny na zakłócenia EMI; złącza LC, SC
+| 1000BASE-T | miedź
+| 1000BASE-SX | MMF, krótko
+| 1000BASE-LX | SMF (do ~10 km)
+| 10GBASE-SR / LR | MMF / SMF
+## Błędy na interfejsie
+- **Runts** – ramki < 64 B; **giants** – > 1518 B
+- **CRC** – zła suma kontrolna (zakłócenia, uszkodzony kabel, duplex mismatch)
+- **Kolizje** – normalne tylko w half-duplex
+- **Late collisions** – po 64. bajcie; typowo **niezgodność dupleksu** (strona half-duplex)
+- **Speed mismatch** – łącze nie wstanie (down/down)
+- Autonegocjacja nieudana: 10/100 Mb/s → half-duplex; 1 Gb/s → full-duplex
+@card Maksymalna długość kabla miedzianego Ethernet? | 100 m
+@card Który światłowód stosuje się na duże odległości? | Jednomodowy (SMF), źródło: laser.
+@card Typowy objaw niezgodności dupleksu? | Late collisions po stronie half-duplex, błędy CRC po stronie full-duplex.
+@card Co to są runts? | Ramki krótsze niż 64 bajty.
+@quiz Po stronie half-duplex rośnie licznik late collisions. Najbardziej prawdopodobna przyczyna?
+- Zbyt długi kabel światłowodowy
++ Niezgodność dupleksu (duplex mismatch)
+- Błędny VLAN natywny
+- Brak PoE
+= Late collisions to klasyczny objaw duplex mismatch – druga strona nadaje w full-duplex.
+@quiz Który standard używa światłowodu wielomodowego na krótkie dystanse?
++ 1000BASE-SX
+- 1000BASE-LX
+- 1000BASE-T
+- 10GBASE-LR
+= SX = short wavelength, MMF. LX i LR to dłuższe dystanse (SMF).
+@quiz Jakie łączenie wymaga kabla krosowanego, gdy brak Auto-MDIX?
+- PC – switch
+- Router – switch
++ Switch – switch
+- AP – switch
+= Urządzenia tego samego typu (switch–switch, PC–PC, router–router) wymagają kabla krosowanego.
+
+@quiz Który kabel zapewni 10 Gb/s na 100 m?
+- Cat5e
+- Cat6
++ Cat6a
+- Cat5
+= Cat6a obsługuje 10GBASE-T do 100 m; Cat6 tylko do ok. 55 m.
+
+@topic tcpudp | TCP i UDP
+## TCP
+- **Połączeniowy** – 3-way handshake: **SYN → SYN-ACK → ACK**
+- Niezawodny: numery sekwencyjne, potwierdzenia (ACK), retransmisje
+- **Okno przesuwne (windowing)** – kontrola przepływu
+- Zamknięcie: FIN, ACK (4 kroki); RST – natychmiastowe przerwanie
+- Nagłówek min. 20 B
+## UDP
+- **Bezpołączeniowy**, bez potwierdzeń i retransmisji
+- Nagłówek 8 B – mały narzut, niskie opóźnienie
+- Dla głosu, wideo, DNS, DHCP, TFTP, SNMP, Syslog
+## Porty
+- Well-known 0–1023, registered 1024–49151, dynamiczne/efemeryczne 49152–65535
+- **Gniazdo (socket)** = adres IP + protokół + port
+@card Kroki 3-way handshake TCP? | SYN → SYN-ACK → ACK
+@card Jaki jest rozmiar nagłówka UDP? | 8 bajtów
+@card Jak TCP kontroluje przepływ danych? | Oknem przesuwnym (windowing).
+@card Dlaczego VoIP używa UDP? | Brak retransmisji i mały narzut – opóźnienie ważniejsze niż utrata pojedynczych pakietów.
+@quiz Które cechy dotyczą TCP? (wybierz dwie)
++ Retransmisja utraconych segmentów
++ Numery sekwencyjne
+- Brak nawiązywania połączenia
+- Nagłówek 8 bajtów
+= TCP jest niezawodny: numeruje segmenty, potwierdza i retransmituje. Bezpołączeniowość i 8 B to cechy UDP.
+@quiz Który protokół korzysta z UDP?
+- SSH
+- HTTP
++ TFTP
+- SMTP
+= TFTP używa UDP 69. SSH, HTTP i SMTP działają na TCP.
+@quiz Jaka flaga TCP natychmiast przerywa połączenie?
+- FIN
++ RST
+- SYN
+- PSH
+= RST (reset) przerywa połączenie natychmiast; FIN zamyka je w sposób uporządkowany.
+
+@quiz Który zakres to porty efemeryczne (dynamiczne)?
+- 0–1023
+- 1024–49151
++ 49152–65535
+- 1–1024
+= Porty dynamiczne/prywatne to 49152–65535.
+
+@topic ipv4 | Adresacja IPv4 i podsieci
+## Podstawy
+- 32 bity, zapis dziesiętny kropkowy; maska określa część sieci
+- Liczba hostów: **2^(32−prefiks) − 2** (adres sieci i broadcast)
+- /31 – łącza punkt-punkt (2 adresy, RFC 3021); /32 – pojedynczy host (loopback)
+## Klasy (historycznie)
+| A | 1–126, maska /8
+| B | 128–191, maska /16
+| C | 192–223, maska /24
+| D | 224–239 multicast
+| E | 240–255 eksperymentalne
+## Adresy specjalne
+| Prywatne | 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
+| Loopback | 127.0.0.0/8
+| APIPA (link-local) | 169.254.0.0/16
+| CGNAT | 100.64.0.0/10
+## Szybkie liczenie
+- Rozmiar bloku = 256 − wartość oktetu maski (np. /26 → 256−192 = 64)
+- Podsieci: wielokrotności rozmiaru bloku; broadcast = następna podsieć − 1
+- **VLSM** – różne maski w jednej sieci; przydział od największej podsieci
+- Wildcard = 255.255.255.255 − maska
+@card Ile hostów w /27? | 30 (32 − 2)
+@card Jaki jest zakres prywatny klasy B? | 172.16.0.0 – 172.31.255.255 (/12)
+@card Jaki adres dostaje host, gdy nie odpowie DHCP (Windows)? | APIPA 169.254.x.x/16
+@card Wildcard dla /22? | 0.0.3.255
+@card Broadcast podsieci 192.168.1.64/26? | 192.168.1.127
+@quiz Ile hostów można zaadresować w podsieci /28?
+- 16
++ 14
+- 30
+- 12
+= 2^4 − 2 = 14.
+@quiz Jaki jest adres broadcast dla hosta 10.1.1.200/27?
+- 10.1.1.255
++ 10.1.1.223
+- 10.1.1.207
+- 10.1.1.191
+= Blok 32: podsieć 10.1.1.192–10.1.1.223, więc broadcast to .223.
+@quiz Która maska da co najmniej 500 hostów przy najmniejszym marnotrawstwie?
+- /24
++ /23
+- /22
+- /25
+= /23 daje 510 hostów; /24 tylko 254, a /22 marnuje adresy (1022).
+@quiz Który adres jest prywatny?
+- 172.32.1.1
++ 172.20.5.5
+- 192.169.0.1
+- 11.0.0.1
+= Zakres 172.16.0.0/12 obejmuje 172.16–172.31, więc 172.20.5.5 jest prywatny.
+
+@topic ipv6 | IPv6 – adresy i typy
+## Format
+- 128 bitów, 8 grup po 4 cyfry hex
+- Skracanie: usuń **zera wiodące** w grupie; **jedną** sekwencję zerowych grup zastąp `::`
+- Typowo /64: 64 bity prefiksu + 64 bity identyfikatora interfejsu
+## Typy adresów
+| Global unicast | 2000::/3 (publiczne)
+| Unique local | FC00::/7 (w praktyce FD00::/8)
+| Link-local | FE80::/10, zawsze obecny, nie routowany
+| Multicast | FF00::/8
+| Loopback | ::1
+| Nieokreślony | ::
+- **Anycast** – ten sam adres na wielu urządzeniach, pakiet trafia do najbliższego
+- IPv6 **nie ma broadcastu** – zastępuje go multicast
+## Ważne multicasty
+| FF02::1 | wszystkie węzły
+| FF02::2 | wszystkie routery
+| FF02::5 / ::6 | OSPFv3 / DR
+| FF02::1:FFxx:xxxx | solicited-node (do NDP)
+## EUI-64
+- MAC 48 bitów → podziel na pół, wstaw **FFFE** w środek, odwróć **7. bit** (U/L)
+- Przykład: 0050.7966.6800 → 0250:79FF:FE66:6800
+@card Prefiks adresów link-local IPv6? | FE80::/10
+@card Prefiks global unicast IPv6? | 2000::/3
+@card Jaki adres to wszystkie routery w IPv6? | FF02::2
+@card Ile razy można użyć :: w adresie? | Tylko raz.
+@card Co wstawia EUI-64 w środek MAC? | FFFE, oraz odwraca 7. bit pierwszego bajtu.
+@card Czy IPv6 ma broadcast? | Nie – używa multicastu.
+@quiz Która forma to poprawne skrócenie 2001:0DB8:0000:0000:0000:0000:0000:0001?
++ 2001:DB8::1
+- 2001:DB8:::1
+- 2001:DB8::0:0::1
+- 21:DB8::1
+= Usuwamy zera wiodące i jedną sekwencję zerowych grup zastępujemy ::.
+@quiz Jaki identyfikator interfejsu powstanie z MAC 0011.2233.4455 metodą EUI-64?
++ 0211:22FF:FE33:4455
+- 0011:22FF:FE33:4455
+- 0211:22FE:FF33:4455
+- 1011:22FF:FE33:4455
+= Wstawiamy FFFE w środek i odwracamy 7. bit: 00 → 02.
+@quiz Jaki typ adresu IPv6 odpowiada prywatnym adresom IPv4?
+- Link-local
++ Unique local (FC00::/7)
+- Global unicast
+- Anycast
+= ULA (FC00::/7, w praktyce FD00::/8) są routowane wewnątrz organizacji, ale nie w Internecie.
+@quiz Na który adres wysyła się wiadomość do wszystkich węzłów w łączu?
++ FF02::1
+- FF02::2
+- FF02::5
+- FE80::1
+= FF02::1 – all-nodes multicast (link-local scope).
+
+@topic ipv6cfg | IPv6 – konfiguracja, NDP, SLAAC
+## NDP (ICMPv6) – zastępuje ARP
+| RS (133) | host prosi routery o RA
+| RA (134) | router ogłasza prefiks, bramę
+| NS (135) | pytanie o MAC (jak ARP request)
+| NA (136) | odpowiedź z MAC
+| Redirect (137) | lepsza trasa
+- **DAD** (Duplicate Address Detection) – NS na własny adres przed użyciem
+## Sposoby adresowania
+- **Statycznie** – `ipv6 address 2001:db8:1::1/64`
+- **EUI-64** – `ipv6 address 2001:db8:1::/64 eui-64`
+- **SLAAC** – host bierze prefiks z RA i sam tworzy ID interfejsu (EUI-64 lub losowo)
+- **Stateless DHCPv6** – SLAAC + DNS z DHCPv6 (flaga O)
+- **Stateful DHCPv6** – adres z serwera DHCPv6 (flaga M)
+## Router
+> ipv6 unicast-routing
+- Bez tego router nie routuje IPv6 i nie wysyła RA
+- Brama domyślna hostów = **link-local** routera z RA
+@card Który komunikat NDP zastępuje ARP request? | Neighbor Solicitation (NS, ICMPv6 135)
+@card Co niesie Router Advertisement? | Prefiks, długość prefiksu, bramę (link-local routera), flagi M/O.
+@card Co robi SLAAC? | Host bierze prefiks z RA i sam generuje identyfikator interfejsu.
+@card Jakie polecenie włącza routing IPv6? | ipv6 unicast-routing
+@quiz Host IPv6 chce poznać MAC sąsiada. Jaki komunikat wyśle?
+- ARP request
++ Neighbor Solicitation
+- Router Solicitation
+- Router Advertisement
+= W IPv6 rolę ARP pełni NDP: NS (pytanie) i NA (odpowiedź).
+@quiz Flaga M=1 w RA oznacza, że host powinien:
+- użyć wyłącznie SLAAC
++ pobrać adres ze stanowego DHCPv6
+- użyć adresu link-local jako globalnego
+- wyłączyć IPv6
+= M (Managed) = stateful DHCPv6; O (Other) = dodatkowe informacje (np. DNS) z DHCPv6.
+@quiz Co jest bramą domyślną hosta, który poznał ją z RA?
++ Adres link-local routera
+- Adres global unicast routera
+- FF02::2
+- ::1
+= RA jest wysyłane z adresu link-local routera i ten adres staje się bramą.
+
+@topic hostip | Ustawienia IP na hostach
+## Weryfikacja
+| Windows | ipconfig /all, arp -a, route print, netsh
+| Linux | ip addr, ip route, ifconfig (starsze)
+| macOS | ifconfig, networksetup, netstat -rn
+- Sprawdź: **adres IP, maskę, bramę domyślną, DNS**
+- Brama musi być w tej samej podsieci co host
+## Typowe problemy
+- Zła maska → host źle rozpoznaje, kto jest lokalny
+- Zła brama → działa tylko sieć lokalna
+- Zły DNS → ping po IP działa, po nazwie nie
+- APIPA 169.254.x.x → brak odpowiedzi DHCP
+@card Ping po IP działa, po nazwie nie. Co sprawdzić? | Ustawienia DNS na hoście.
+@card Polecenie Windows pokazujące DNS i MAC? | ipconfig /all
+@card Polecenie Linux pokazujące trasy? | ip route
+@quiz Host komunikuje się z siecią lokalną, ale nie z innymi sieciami. Najczęstsza przyczyna?
+- Zły serwer DNS
++ Brak lub błędna brama domyślna
+- Zły adres MAC
+- Kabel krosowany
+= Ruch poza podsieć wymaga poprawnej bramy domyślnej w tej samej podsieci co host.
+@quiz Które polecenie w Windows pokaże tablicę ARP?
++ arp -a
+- ipconfig /flushdns
+- netstat -an
+- tracert
+= arp -a wyświetla mapowania IP → MAC.
+
+@quiz Host ma adres 192.168.1.50/24 i bramę 192.168.2.1. Jaki będzie efekt?
+- Pełna łączność
++ Brak łączności poza siecią lokalną – brama jest w innej podsieci
+- Brak łączności w sieci lokalnej
+- Host dostanie adres APIPA
+= Brama musi należeć do podsieci hosta, inaczej ruch do innych sieci nie wyjdzie.
+@quiz Które polecenie w Linux pokaże adresy IP interfejsów?
++ ip addr
+- ipconfig /all
+- show ip interface brief
+- arp -d
+= ip addr (ip a) wyświetla adresy interfejsów w Linuksie.
+
+@topic switching | Przełączanie Ethernet
+## Ramka Ethernet
+- Preambuła, MAC docelowy (6 B), MAC źródłowy (6 B), typ/długość, dane (46–1500 B), FCS (4 B)
+- MAC: 48 bitów; pierwsze 24 bity to **OUI** producenta
+## Jak działa switch
+- **Uczy się** MAC źródłowego i portu → tablica MAC (CAM)
+- **Przekazuje** znaną ramkę unicast tylko na właściwy port
+- **Zalewa (flood)** nieznany unicast, broadcast i multicast na wszystkie porty w VLAN poza źródłowym
+- **Filtruje** – nie odsyła ramki na port, z którego przyszła
+- Wpisy dynamiczne starzeją się po **300 s** (domyślnie)
+## Metody przełączania
+- **Store-and-forward** – odbiera całą ramkę, sprawdza FCS
+- **Cut-through** – wysyła po odczytaniu MAC docelowego (szybciej, bez kontroli błędów)
+- **Fragment-free** – czeka na 64 B (wykrywa kolizje)
+## Domeny
+- Każdy port switcha = osobna domena kolizyjna
+- Cały VLAN = jedna domena rozgłoszeniowa
+> show mac address-table
+@card Czego uczy się switch z ramki? | MAC źródłowego i portu, z którego ramka przyszła.
+@card Co robi switch z ramką o nieznanym MAC docelowym? | Zalewa (flood) ją na wszystkie porty VLAN poza źródłowym.
+@card Domyślny czas starzenia wpisu MAC? | 300 sekund
+@card Ile bitów ma OUI? | 24 bity (pierwsze 3 bajty MAC).
+@quiz Switch otrzymuje ramkę z adresem docelowym, którego nie ma w tablicy MAC. Co zrobi?
+- Odrzuci ramkę
+- Wyśle ją do bramy domyślnej
++ Wyśle ją na wszystkie porty w VLAN oprócz źródłowego
+- Wyśle zapytanie ARP
+= Nieznany unicast jest zalewany (flooding) w obrębie VLAN.
+@quiz Która metoda przełączania sprawdza FCS przed wysłaniem ramki?
++ Store-and-forward
+- Cut-through
+- Fragment-free
+- Fast-forward
+= Tylko store-and-forward odbiera całą ramkę i weryfikuje sumę kontrolną.
+@quiz Na podstawie czego switch buduje tablicę MAC?
+- Docelowego adresu MAC
++ Źródłowego adresu MAC
+- Adresu IP źródłowego
+- Numeru VLAN natywnego
+= Switch uczy się adresu źródłowego i portu wejściowego każdej ramki.
+
+@quiz Ramka broadcast trafia do switcha z 3 VLAN-ami. Gdzie zostanie wysłana?
+- Na wszystkie porty switcha
++ Na wszystkie porty tego samego VLAN poza źródłowym
+- Tylko na trunk
+- Nigdzie
+= Broadcast nie opuszcza swojego VLAN (domeny rozgłoszeniowej).
+
+@topic wireless | Podstawy sieci bezprzewodowych
+## Pasma i standardy
+| 802.11a | 5 GHz, 54 Mb/s
+| 802.11b | 2,4 GHz, 11 Mb/s
+| 802.11g | 2,4 GHz, 54 Mb/s
+| 802.11n (Wi-Fi 4) | 2,4 i 5 GHz
+| 802.11ac (Wi-Fi 5) | 5 GHz
+| 802.11ax (Wi-Fi 6/6E) | 2,4 / 5 / 6 GHz
+| 802.11be (Wi-Fi 7) | 2,4 / 5 / 6 GHz
+- Niezachodzące kanały 2,4 GHz: **1, 6, 11**
+- 5 GHz: dużo więcej niezachodzących kanałów, mniejszy zasięg
+## Pojęcia
+- **SSID** – nazwa sieci; **BSSID** – MAC radia AP
+- **BSS** – jeden AP i jego klienci; **ESS** – wiele AP z tym samym SSID (roaming)
+- **IBSS** – ad hoc, bez AP
+- **Repeater, Workgroup bridge, Outdoor bridge, Mesh** – inne tryby
+- Wi-Fi to medium **half-duplex**, dostęp CSMA/CA
+## RF
+- Zakłócenia: odbicie, załamanie, absorpcja, rozpraszanie
+- Sąsiednie AP na różnych kanałach, by uniknąć interferencji
+@card Niezachodzące kanały w 2,4 GHz? | 1, 6 i 11
+@card Co to jest BSSID? | Adres MAC radia punktu dostępowego.
+@card Czym jest ESS? | Wiele AP z tym samym SSID połączonych siecią przewodową (roaming).
+@card Jaką metodą dostępu do medium posługuje się Wi-Fi? | CSMA/CA
+@quiz Które kanały 2,4 GHz należy użyć dla trzech sąsiednich AP?
+- 1, 2, 3
++ 1, 6, 11
+- 1, 5, 9
+- 3, 6, 9
+= Tylko 1, 6 i 11 nie nakładają się w paśmie 2,4 GHz.
+@quiz Który standard jako pierwszy wprowadził pasmo 6 GHz?
+- 802.11ac
+- 802.11n
++ 802.11ax (Wi-Fi 6E)
+- 802.11g
+= Wi-Fi 6E rozszerza 802.11ax o pasmo 6 GHz.
+@quiz Sieć bez punktu dostępowego, gdzie klienci łączą się bezpośrednio, to:
+- BSS
+- ESS
++ IBSS
+- WGB
+= IBSS (Independent BSS) to tryb ad hoc.

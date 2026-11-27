@@ -1,0 +1,811 @@
+#! Obszar 5 – Security Fundamentals (15%) – rozszerzony dział VPN
+@domain 5 | Bezpieczeństwo i VPN | 15
+
+@topic secconcepts | Pojęcia bezpieczeństwa
+## Triada CIA
+- **Poufność (Confidentiality)** – dane widzą tylko uprawnieni (szyfrowanie)
+- **Integralność (Integrity)** – dane nie zostały zmienione (hash, HMAC)
+- **Dostępność (Availability)** – systemy działają, gdy są potrzebne (redundancja, ochrona przed DoS)
+## Podstawowe terminy
+- **Podatność (vulnerability)** – słabość systemu (błąd, zła konfiguracja)
+- **Exploit** – sposób/narzędzie wykorzystujące podatność
+- **Zagrożenie (threat)** – potencjalne niebezpieczeństwo wykorzystania podatności
+- **Mitygacja (mitigation)** – działanie ograniczające ryzyko (łatka, ACL, szkolenie)
+- **Ryzyko** – prawdopodobieństwo × skutek
+- **Atak zero-day** – exploit podatności, dla której nie ma jeszcze łatki
+## Obrona warstwowa (defense in depth)
+- Wiele niezależnych zabezpieczeń: fizyczne, sieciowe, na hostach, ludzie, procedury
+@card Co oznacza C w triadzie CIA? | Poufność (Confidentiality) – dane dostępne tylko dla uprawnionych.
+@card Różnica podatność vs exploit? | Podatność to słabość; exploit to sposób jej wykorzystania.
+@card Czym jest mitygacja? | Działanie zmniejszające ryzyko lub skutki zagrożenia.
+@card Który element CIA chroni hash? | Integralność.
+@quiz Nieaktualny system z błędem w usłudze SMB to przykład:
++ podatności
+- exploitu
+- mitygacji
+- zagrożenia zero-day po łatce
+= Słabość systemu to podatność; kod, który ją wykorzysta, to exploit.
+@quiz Atak DDoS uderza przede wszystkim w:
+- poufność
+- integralność
++ dostępność
+- rozliczalność
+= DoS/DDoS ma uniemożliwić korzystanie z usługi – narusza dostępność.
+@quiz Instalacja poprawki bezpieczeństwa to przykład:
+- exploitu
++ mitygacji
+- zagrożenia
+- rekonesansu
+= Łatanie usuwa podatność – to działanie mitygujące.
+
+@topic attacks | Rodzaje ataków
+## Ataki sieciowe
+- **DoS / DDoS** – przeciążenie celu (DDoS z wielu źródeł, botnet); np. TCP SYN flood
+- **Spoofing** – podszywanie się: IP, MAC, serwer DHCP, ARP
+- **Reflection i amplification** – atakujący wysyła zapytania z **sfałszowanym adresem ofiary** do serwerów (DNS, NTP), które odsyłają dużo większe odpowiedzi do ofiary
+- **Man-in-the-middle** – podsłuch/modyfikacja na drodze (np. ARP poisoning, fałszywy AP)
+- **Rekonesans** – zbieranie informacji (skanowanie portów, ping sweep, whois, nslookup)
+- **Ataki na hasła** – słownikowe, brute force, credential stuffing
+## Malware
+- **Wirus** – dołącza się do pliku, wymaga uruchomienia przez użytkownika
+- **Robak (worm)** – sam się rozprzestrzenia przez sieć
+- **Trojan** – udaje legalny program
+- **Ransomware** – szyfruje dane i żąda okupu
+## Socjotechnika
+- **Phishing** – masowe fałszywe e-maile
+- **Spear phishing** – celowany w konkretną osobę/firmę
+- **Whaling** – celowany w kadrę zarządzającą
+- **Vishing** (telefon), **smishing** (SMS)
+- **Pharming** – przekierowanie na fałszywą stronę (np. przez DNS)
+- **Watering hole** – zainfekowanie strony często odwiedzanej przez ofiary
+- **Tailgating** – wejście za uprawnioną osobą do strefy chronionej
+@card Czym jest atak amplifikacji? | Małe zapytanie z adresem ofiary do serwera (DNS/NTP) generuje dużą odpowiedź wysyłaną do ofiary.
+@card Różnica wirus vs robak? | Wirus wymaga uruchomienia przez użytkownika; robak rozprzestrzenia się sam.
+@card Czym jest whaling? | Phishing wymierzony w kadrę zarządzającą.
+@card Czym jest vishing? | Phishing przez telefon (voice).
+@card Przykład ataku MITM w LAN? | ARP poisoning (spoofing ARP).
+@quiz Atakujący wysyła małe zapytania DNS ze sfałszowanym adresem źródłowym ofiary. Co to za atak?
+- Phishing
++ Reflection/amplification
+- Brute force
+- Tailgating
+= Serwery DNS odsyłają duże odpowiedzi do ofiary – to odbicie z amplifikacją.
+@quiz Złośliwy program, który sam rozprzestrzenia się po sieci bez udziału użytkownika, to:
+- wirus
++ robak
+- trojan
+- keylogger
+= Robak (worm) replikuje się samodzielnie.
+@quiz Osoba wchodzi do serwerowni tuż za pracownikiem, który otworzył drzwi kartą. To:
++ tailgating
+- pharming
+- spoofing
+- smishing
+= Tailgating (piggybacking) – fizyczne wejście za uprawnioną osobą.
+@quiz Ping sweep i skanowanie portów to typowe elementy:
+- ataku DoS
++ rekonesansu
+- ransomware
+- whalingu
+= Rekonesans to zbieranie informacji przed właściwym atakiem.
+
+@topic secprogram | Program bezpieczeństwa, hasła i MFA
+## Elementy programu bezpieczeństwa
+- **Świadomość użytkowników (user awareness)** – ciągłe przypominanie, np. symulacje phishingu
+- **Szkolenia (user training)** – formalne kursy, polityki, procedury
+- **Kontrola dostępu fizycznego** – zamki, karty, identyfikatory, kamery, śluzy (mantrap), biometria
+## Hasła
+- Długie, złożone, unikalne; menedżer haseł; ograniczenie prób logowania
+- Problem: ludzie wybierają słabe hasła i używają ich wielokrotnie
+## Alternatywy i uzupełnienia
+- **MFA** – co najmniej dwa różne czynniki:
+| Wiedza | hasło, PIN
+| Posiadanie | telefon, token, karta
+| Cecha (inherence) | odcisk palca, twarz
+- **Certyfikaty cyfrowe** – tożsamość potwierdzona przez CA
+- **Biometria** – cechy fizyczne lub behawioralne
+## Hasła na urządzeniach Cisco
+| Typ 0 | jawny tekst
+| Typ 5 | MD5 (enable secret – starsze)
+| Typ 7 | słabe, odwracalne (service password-encryption)
+| Typ 8 | PBKDF2-SHA-256
+| Typ 9 | scrypt (zalecany)
+> enable algorithm-type scrypt secret Haslo123!
+> username admin algorithm-type scrypt secret Haslo123!
+> security passwords min-length 10
+> login block-for 120 attempts 3 within 60
+@card Trzy kategorie czynników MFA? | Coś, co wiesz; coś, co masz; coś, czym jesteś.
+@card Czy hasło + PIN to MFA? | Nie – oba to „coś, co wiesz” (ten sam czynnik).
+@card Który typ hasła Cisco jest najsłabszy po typie 0? | Typ 7 – łatwo odwracalny.
+@card Który typ hasła Cisco używa scrypt? | Typ 9
+@card Różnica awareness vs training? | Awareness – ciągłe przypominanie; training – formalne szkolenia.
+@quiz Które połączenie to prawdziwe uwierzytelnianie wieloskładnikowe?
+- hasło i pytanie pomocnicze
++ hasło i kod z aplikacji na telefonie
+- PIN i hasło
+- dwa różne hasła
+= Hasło (wiedza) + telefon (posiadanie) to dwa różne czynniki.
+@quiz Firma wysyła pracownikom fałszywe e-maile phishingowe, aby sprawdzić ich czujność. To element:
++ programu świadomości użytkowników
+- kontroli dostępu fizycznego
+- uwierzytelniania wieloskładnikowego
+- IPS
+= Symulacje phishingu to klasyczny element user awareness.
+@quiz Które polecenie zapisze hasło enable najmocniejszym algorytmem?
+- enable password X
+- service password-encryption
++ enable algorithm-type scrypt secret X
+- enable secret 7 X
+= Typ 9 (scrypt) jest najmocniejszy; enable password i typ 7 są słabe.
+
+@topic crypto | Kryptografia dla VPN
+## Szyfrowanie symetryczne
+- **Ten sam klucz** do szyfrowania i odszyfrowania; szybkie – do szyfrowania danych
+- **AES** (128/192/256) – standard; DES i 3DES – przestarzałe
+- Problem: jak bezpiecznie przekazać klucz? → Diffie-Hellman
+## Szyfrowanie asymetryczne
+- **Para kluczy**: publiczny (jawny) i prywatny (tajny); wolne
+- Zaszyfrowane kluczem **publicznym** odbiorcy → odszyfruje tylko jego **prywatny** (poufność)
+- **Podpis cyfrowy**: hash podpisany kluczem **prywatnym** nadawcy, weryfikowany jego **publicznym** (autentyczność, niezaprzeczalność)
+- Algorytmy: **RSA**, **ECC** (ECDSA)
+## Funkcje skrótu i HMAC
+- **Hash** – stała długość, jednokierunkowy; zmiana 1 bitu zmienia wynik → **integralność**
+- **MD5** (złamany), **SHA-1** (słaby), **SHA-2**: SHA-256/384/512 (zalecane)
+- **HMAC** – hash z tajnym kluczem → integralność + **uwierzytelnienie** nadawcy
+## Diffie-Hellman
+- Dwie strony ustalają **wspólny tajny klucz** przez niezaufaną sieć, nie przesyłając go
+- Grupy DH: **14** (2048 bit) – minimum zalecane; **19, 20, 21** – krzywe eliptyczne; 1, 2, 5 – przestarzałe
+- DH nie uwierzytelnia stron – dlatego łączy się go z PSK lub certyfikatami
+## PKI
+- **CA** wystawia **certyfikat X.509** wiążący klucz publiczny z tożsamością
+- Unieważnianie: **CRL** lub **OCSP**
+@card Różnica szyfrowanie symetryczne vs asymetryczne? | Symetryczne: jeden wspólny klucz, szybkie. Asymetryczne: para kluczy publiczny/prywatny, wolne.
+@card Którym kluczem podpisuje się dane? | Prywatnym nadawcy; weryfikuje się kluczem publicznym.
+@card Do czego służy Diffie-Hellman? | Do bezpiecznego ustalenia wspólnego tajnego klucza przez niezaufaną sieć.
+@card Czym HMAC różni się od zwykłego hasha? | Używa tajnego klucza – zapewnia integralność i uwierzytelnienie.
+@card Minimalna zalecana grupa DH? | 14 (2048 bitów)
+@card Kto wystawia certyfikaty cyfrowe? | Urząd certyfikacji (CA).
+@quiz Którym algorytmem szyfruje się dane w tunelu IPsec?
++ AES
+- SHA-256
+- RSA
+- Diffie-Hellman
+= AES to szyfr symetryczny do danych; SHA służy integralności, RSA uwierzytelnieniu, DH wymianie kluczy.
+@quiz Alicja chce wysłać Bobowi dane, które odczyta tylko Bob. Którego klucza użyje?
+- Swojego prywatnego
+- Swojego publicznego
++ Publicznego klucza Boba
+- Prywatnego klucza Boba
+= Dane zaszyfrowane kluczem publicznym Boba odszyfruje tylko jego klucz prywatny.
+@quiz Która funkcja zapewnia integralność danych w IPsec?
+- AES
++ SHA-256 (HMAC)
+- DH grupa 14
+- RSA
+= Funkcja skrótu (w HMAC) wykrywa modyfikację danych.
+@quiz Dlaczego sam Diffie-Hellman nie chroni przed atakiem MITM?
++ Nie uwierzytelnia stron wymiany
+- Używa zbyt krótkich kluczy
+- Przesyła klucz jawnym tekstem
+- Działa tylko w IPv6
+= DH ustala klucz, ale nie potwierdza, z kim – dlatego dodaje się PSK lub certyfikaty.
+
+@topic vpnbasics | VPN – rodzaje i pojęcia
+## Czym jest VPN
+- Prywatne, zwykle **szyfrowane** połączenie przez sieć publiczną (Internet)
+- Zapewnia: **poufność, integralność, uwierzytelnienie, ochronę przed powtórzeniem (anti-replay)**
+- Tańszy i bardziej elastyczny niż łącza dzierżawione
+## Site-to-site
+- Łączy **całe sieci** (np. centrala ↔ oddział)
+- Tunel zestawiają **bramy VPN**: routery, firewalle (ASA, Firepower)
+- Hosty **nie wiedzą** o VPN – wysyłają zwykły ruch do bramy
+- Zwykle stały (always-on); najczęściej **IPsec**
+## Remote access (zdalny dostęp)
+- Łączy **pojedynczego użytkownika** z siecią firmy
+- Klient na urządzeniu (np. **Cisco Secure Client**, dawniej AnyConnect) lub przeglądarka
+- **IPsec (IKEv2)** albo **SSL/TLS**
+- Zestawiany na żądanie
+## VPN operatora vs VPN przez Internet
+- **Enterprise-managed** – firma sama zestawia tunele przez Internet (IPsec, GRE, DMVPN, SSL)
+- **Provider-managed** – VPN zapewnia operator (MPLS L3VPN, L2VPN/VPLS) – rozdziela ruch klientów, ale domyślnie **nie szyfruje**
+## Tunelowanie
+- Oryginalny pakiet jest zamykany w nowym nagłówku (enkapsulacja)
+- Tunel ≠ szyfrowanie: GRE tuneluje bez szyfrowania, IPsec szyfruje
+@card Różnica site-to-site vs remote access VPN? | Site-to-site łączy całe sieci bramami; remote access łączy pojedynczego użytkownika z klientem VPN.
+@card Czy hosty wiedzą o tunelu site-to-site? | Nie – szyfrują bramy VPN, hosty wysyłają zwykły ruch.
+@card Jakie usługi zapewnia VPN IPsec? | Poufność, integralność, uwierzytelnienie, anti-replay.
+@card Czy MPLS VPN domyślnie szyfruje ruch? | Nie – tylko separuje ruch klientów (VRF, etykiety).
+@card Jak nazywa się obecnie klient AnyConnect? | Cisco Secure Client.
+@quiz Firma łączy 20 oddziałów z centralą przez Internet; hosty nie mają instalować oprogramowania. Jaki VPN?
++ Site-to-site IPsec
+- Remote access SSL
+- Clientless SSL
+- Telnet przez Internet
+= Site-to-site zestawiają bramy VPN – hosty nic nie konfigurują.
+@quiz Pracownik łączy się z hotelu do sieci firmy z laptopa. Jaki to typ VPN?
+- Site-to-site
++ Remote access
+- MPLS L3VPN
+- VPLS
+= Pojedynczy użytkownik z klientem VPN to remote access.
+@quiz Które stwierdzenie o tunelach GRE jest prawdziwe?
+- GRE szyfruje dane algorytmem AES
++ GRE tuneluje ruch, ale go nie szyfruje
+- GRE działa tylko w trybie transport
+- GRE wymaga certyfikatów
+= GRE to sama enkapsulacja; szyfrowanie dodaje IPsec.
+@quiz Które cechy dotyczą VPN site-to-site? (wybierz dwie)
++ Tunel zestawiają routery lub firewalle
++ Łączy całe sieci lokalizacji
+- Wymaga klienta VPN na każdym komputerze
+- Działa tylko przez przeglądarkę
+= Site-to-site to połączenie brama–brama dla całych sieci.
+
+@quiz Którą usługę zapewnia anti-replay w VPN IPsec?
+- Szyfrowanie danych
++ Odrzucanie przechwyconych i ponownie wysłanych pakietów
+- Kompresję nagłówków
+- Wybór trasy
+= Numery sekwencyjne pozwalają wykryć powtórzone pakiety.
+
+@topic ipsec | IPsec – AH, ESP i tryby
+## IPsec
+- Zestaw protokołów (framework) zabezpieczających ruch IP na warstwie 3
+- Elementy: **protokół (AH/ESP)**, **szyfrowanie**, **integralność**, **uwierzytelnienie**, **wymiana kluczy (DH/IKE)**
+## ESP – Encapsulating Security Payload
+- **Protokół IP nr 50**
+- **Szyfrowanie** + integralność + uwierzytelnienie + anti-replay
+- Nagłówek ESP: **SPI** (identyfikator SA), **numer sekwencyjny** (anti-replay); stopka i ICV (wartość kontrolna)
+- Działa przez NAT dzięki **NAT-T** (UDP 4500)
+- W praktyce używany prawie zawsze
+## AH – Authentication Header
+- **Protokół IP nr 51**
+- Integralność + uwierzytelnienie + anti-replay, **bez szyfrowania**
+- Chroni także niezmienne pola zewnętrznego nagłówka IP → **nie działa z NAT**
+## Tryb tunelowy (tunnel mode)
+- Cały oryginalny pakiet (z nagłówkiem IP) jest szyfrowany i dostaje **nowy nagłówek IP** (adresy bram)
+- Ukrywa prawdziwe adresy hostów
+- Standard dla **site-to-site** i remote access
+## Tryb transportowy (transport mode)
+- Zostaje **oryginalny nagłówek IP**, chroniony jest tylko ładunek
+- Mniejszy narzut; host-to-host lub **GRE over IPsec**
+## Security Association (SA)
+- Uzgodniony zestaw parametrów (algorytmy, klucze, czas życia)
+- **IPsec SA są jednokierunkowe** → para na tunel (wysyłanie + odbiór); identyfikowane przez **SPI**
+@card Numer protokołu IP dla ESP? | 50
+@card Numer protokołu IP dla AH? | 51
+@card Czy AH szyfruje dane? | Nie – zapewnia tylko integralność, uwierzytelnienie i anti-replay.
+@card Dlaczego AH nie działa z NAT? | Chroni pola zewnętrznego nagłówka IP, które NAT zmienia.
+@card Co robi tryb tunelowy IPsec? | Szyfruje cały oryginalny pakiet i dodaje nowy nagłówek IP.
+@card Co robi tryb transportowy IPsec? | Zostawia oryginalny nagłówek IP, chroni tylko ładunek.
+@card Czy IPsec SA jest dwukierunkowe? | Nie – jednokierunkowe; tunel ma parę SA.
+@card Co identyfikuje SA w pakiecie ESP? | SPI (Security Parameter Index).
+@card Jak IPsec chroni przed atakiem powtórzenia? | Numerami sekwencyjnymi (anti-replay).
+@quiz Który protokół IPsec zapewnia poufność danych?
++ ESP
+- AH
+- IKE
+- GRE
+= Tylko ESP szyfruje; AH zapewnia integralność i uwierzytelnienie.
+@quiz W którym trybie IPsec oryginalny nagłówek IP jest ukryty wewnątrz zaszyfrowanego pakietu?
+- Transportowym
++ Tunelowym
+- Agresywnym
+- Głównym
+= Tryb tunelowy szyfruje cały pakiet i dodaje nowy nagłówek z adresami bram.
+@quiz Dlaczego AH jest rzadko stosowany w sieciach z NAT?
+- Bo nie obsługuje IPv4
++ Bo NAT zmienia pola nagłówka IP objęte kontrolą integralności AH
+- Bo wymaga TCP
+- Bo nie ma numerów sekwencyjnych
+= AH chroni zewnętrzny nagłówek IP; zmiana adresu przez NAT psuje weryfikację.
+@quiz Ile IPsec SA potrzeba dla ruchu dwukierunkowego między dwiema bramami (jedna para sieci)?
+- 1
++ 2
+- 4
+- 6
+= IPsec SA są jednokierunkowe – po jednej na każdy kierunek.
+@quiz Jaki numer protokołu IP zobaczysz w nagłówku pakietu ESP bez NAT-T?
+- 47
++ 50
+- 51
+- 17
+= ESP = 50, AH = 51, GRE = 47, UDP = 17.
+@quiz Które usługi zapewnia ESP? (wybierz dwie)
++ Poufność (szyfrowanie)
++ Ochronę przed powtórzeniem pakietów
+- Dynamiczny routing
+- Przydział adresów IP klientom
+= ESP: szyfrowanie, integralność, uwierzytelnienie i anti-replay.
+
+@topic ike | IKE – zestawianie tunelu IPsec
+## Rola IKE
+- Negocjuje parametry, wymienia klucze (DH), uwierzytelnia strony, tworzy SA
+- **UDP 500**; przy NAT przechodzi na **UDP 4500 (NAT-T)**
+- Uwierzytelnienie: **PSK** (wspólny klucz), **podpisy RSA (certyfikaty)**, w IKEv2 także **EAP**
+## IKEv1 – dwie fazy
+- **Faza 1** – tworzy **IKE (ISAKMP) SA**: bezpieczny kanał do dalszych negocjacji; jedna, **dwukierunkowa**
+- **Main Mode** – 6 komunikatów (1–2 polityka, 3–4 DH, 5–6 uwierzytelnienie, zaszyfrowane), chroni tożsamość
+- **Aggressive Mode** – 3 komunikaty, szybciej, ale **tożsamość jawna**
+- **Faza 2 – Quick Mode** – 3 komunikaty, tworzy **IPsec SA** (para jednokierunkowych) wg transform setu
+## Parametry polityki fazy 1 – „HAGLE”
+| H – Hash | SHA-256 / SHA-384
+| A – Authentication | pre-share / rsa-sig
+| G – Group (DH) | 14, 19, 20…
+| L – Lifetime | np. 86400 s
+| E – Encryption | AES-256
+- Polityki obu stron muszą się zgadzać (sprawdzane od najniższego numeru)
+## IKEv2
+- Krótsza wymiana: **IKE_SA_INIT + IKE_AUTH = 4 komunikaty** (tworzy IKE SA i pierwszą CHILD_SA)
+- Kolejne SA: CREATE_CHILD_SA
+- Wbudowane: **NAT-T, DPD** (wykrywanie martwego partnera), **EAP**, MOBIKE, ochrona przed DoS (cookies)
+- Możliwe **asymetryczne uwierzytelnianie** (np. jedna strona PSK, druga certyfikat)
+- Zalecany zamiast IKEv1
+## PFS
+- **Perfect Forward Secrecy** – nowa wymiana DH dla kluczy fazy 2; złamanie jednego klucza nie ujawnia innych
+@card Port IKE? | UDP 500 (UDP 4500 przy NAT-T)
+@card Co tworzy faza 1 IKEv1? | IKE/ISAKMP SA – bezpieczny, dwukierunkowy kanał do negocjacji fazy 2.
+@card Co tworzy faza 2 IKEv1 (Quick Mode)? | IPsec SA (para jednokierunkowych) do ochrony danych.
+@card Ile komunikatów ma Main Mode? | 6
+@card Ile komunikatów ma Aggressive Mode i jaka jest jego wada? | 3; tożsamość stron przesyłana jest jawnie.
+@card Co oznacza skrót HAGLE? | Hash, Authentication, Group (DH), Lifetime, Encryption – parametry polityki IKE.
+@card Ile komunikatów potrzebuje IKEv2 do zestawienia tunelu? | 4 (IKE_SA_INIT i IKE_AUTH)
+@card Co daje PFS? | Nowe klucze z osobnej wymiany DH – kompromitacja jednego klucza nie ujawnia innych.
+@card Jakie metody uwierzytelnienia obsługuje IKE? | Pre-shared key, podpisy RSA (certyfikaty), w IKEv2 także EAP.
+@quiz Która faza IKEv1 tworzy SA chroniące właściwy ruch użytkowników?
+- Faza 1 Main Mode
+- Faza 1 Aggressive Mode
++ Faza 2 Quick Mode
+- Faza 0
+= Quick Mode (faza 2) negocjuje IPsec SA dla danych.
+@quiz Który tryb IKEv1 fazy 1 jest szybszy, ale ujawnia tożsamość stron?
+- Main Mode
++ Aggressive Mode
+- Quick Mode
+- Transport Mode
+= Aggressive Mode używa 3 komunikatów i nie szyfruje tożsamości.
+@quiz Tunel IPsec między routerami za NAT. Jakie porty muszą być otwarte na firewallu? (wybierz dwie)
++ UDP 500
++ UDP 4500
+- TCP 443
+- TCP 22
+= IKE używa UDP 500, a NAT-T przenosi IKE i ESP na UDP 4500.
+@quiz Który parametr NIE należy do polityki ISAKMP (HAGLE)?
+- Grupa Diffie-Hellman
+- Algorytm szyfrowania
+- Metoda uwierzytelnienia
++ Lista sieci (ACL) do szyfrowania
+= ACL ruchu „interesującego” należy do konfiguracji fazy 2 (crypto map), nie polityki fazy 1.
+@quiz Która zaleta IKEv2 względem IKEv1 jest prawdziwa?
++ Ma wbudowany NAT-T i DPD oraz krótszą wymianę komunikatów
+- Nie wymaga uwierzytelniania stron
+- Używa TCP 443
+- Nie potrzebuje Diffie-Hellmana
+= IKEv2 zestawia tunel w 4 komunikatach i ma wbudowane NAT-T, DPD i EAP.
+@quiz Funkcja, która generuje nowe klucze fazy 2 osobną wymianą DH, to:
+- DPD
++ PFS
+- NAT-T
+- XAUTH
+= Perfect Forward Secrecy.
+
+@quiz Ile IKE SA tworzy faza 1 IKEv1 między dwoma routerami?
++ Jedną dwukierunkową
+- Dwie jednokierunkowe
+- Cztery
+- Żadnej
+= IKE/ISAKMP SA jest jedna i dwukierunkowa; IPsec SA są jednokierunkowe.
+
+@topic ipseccfg | IPsec site-to-site – konfiguracja i weryfikacja
+## Kroki (IKEv1, crypto map)
+1. Polityka ISAKMP (faza 1)
+> crypto isakmp policy 10
+>  encryption aes 256
+>  hash sha256
+>  authentication pre-share
+>  group 14
+>  lifetime 86400
+> crypto isakmp key Tajne123 address 203.0.113.2
+2. Transform set (faza 2)
+> crypto ipsec transform-set TS esp-aes 256 esp-sha256-hmac
+>  mode tunnel
+3. ACL ruchu interesującego (lustrzana po drugiej stronie)
+> access-list 110 permit ip 10.1.0.0 0.0.255.255 10.2.0.0 0.0.255.255
+4. Crypto map i przypisanie do interfejsu zewnętrznego
+> crypto map CMAP 10 ipsec-isakmp
+>  set peer 203.0.113.2
+>  set transform-set TS
+>  match address 110
+> interface g0/0
+>  crypto map CMAP
+## Weryfikacja
+> show crypto isakmp sa     (QM_IDLE = faza 1 OK)
+> show crypto ipsec sa      (liczniki encaps/decaps)
+> show crypto map
+- Tunel zestawia się dopiero, gdy pojawi się **ruch interesujący**
+- Typowe błędy: niezgodna polityka/klucz, ACL nie lustrzane, NAT tłumaczy ruch, który ma iść tunelem (wyklucz go z NAT)
+@card Co oznacza stan QM_IDLE w show crypto isakmp sa? | Faza 1 zestawiona poprawnie (IKE SA aktywne).
+@card Do czego służy crypto ACL (match address)? | Wskazuje ruch „interesujący”, który ma być szyfrowany.
+@card Gdzie przypisuje się crypto map? | Na interfejsie zewnętrznym (w stronę peera).
+@card Co definiuje transform set? | Protokół i algorytmy fazy 2 (np. esp-aes 256, esp-sha256-hmac) oraz tryb.
+@card Kiedy tunel crypto map się zestawia? | Gdy pojawi się ruch pasujący do crypto ACL.
+@quiz show crypto isakmp sa pokazuje QM_IDLE, ale show crypto ipsec sa ma zerowe liczniki encaps. Co sprawdzić?
+- Klucz pre-shared
++ Czy ruch pasuje do crypto ACL i nie jest tłumaczony przez NAT
+- Grupę DH fazy 1
+- Hasło enable
+= Faza 1 działa; brak szyfrowanych pakietów oznacza, że ruch nie trafia do tunelu (ACL, routing, NAT).
+@quiz Które polecenie pokaże liczbę zaszyfrowanych i odszyfrowanych pakietów?
+- show crypto isakmp sa
++ show crypto ipsec sa
+- show ip nat translations
+- show interfaces tunnel 0
+= show crypto ipsec sa zawiera liczniki #pkts encaps/decaps.
+@quiz Co musi być spełnione dla crypto ACL po obu stronach tunelu?
++ ACL muszą być lustrzanym odbiciem (źródło ↔ cel)
+- ACL muszą mieć ten sam numer
+- ACL muszą kończyć się permit any
+- ACL muszą być standardowe
+= Ruch chroniony na R1 (A→B) musi odpowiadać ruchowi na R2 (B→A).
+
+@topic gre | GRE, VTI i DMVPN
+## GRE
+- **Generic Routing Encapsulation**, **protokół IP nr 47**
+- Tuneluje **dowolny protokół**, w tym **multicast i broadcast** → działają protokoły routingu (OSPF, EIGRP)
+- **Brak szyfrowania**, narzut 24 B (20 B nowy nagłówek IP + 4 B GRE)
+> interface tunnel 0
+>  ip address 172.16.0.1 255.255.255.252
+>  tunnel source g0/0
+>  tunnel destination 203.0.113.2
+- Tunel jest up, gdy istnieje trasa do destination i źródło jest up
+- Uwaga na **rekurencyjny routing** – trasa do celu tunelu nie może prowadzić przez tunel
+## GRE over IPsec
+- GRE daje multicast/routing, IPsec daje szyfrowanie
+- Zwykle IPsec w **trybie transportowym** (GRE już dodał nowy nagłówek IP)
+## VTI (Virtual Tunnel Interface)
+- Interfejs tunelowy chroniony profilem IPsec (`tunnel mode ipsec ipv4` + `tunnel protection ipsec profile`)
+- Routing (także dynamiczny) kieruje ruch do tunelu – **bez crypto ACL**
+## DMVPN (Dynamic Multipoint VPN)
+- Skalowalny **hub-and-spoke** z **dynamicznymi tunelami spoke-to-spoke**
+- Składniki: **mGRE** (jeden interfejs tunelowy na wiele punktów), **NHRP** (spoke rejestrują publiczne adresy u huba; spoke pytają huba o adres innego spoke), **IPsec** (szyfrowanie), protokół routingu
+- Hub ma stały adres; spoke mogą mieć dynamiczne
+- Zalety: prosta konfiguracja huba przy dodawaniu oddziałów, bezpośredni ruch między oddziałami
+@card Numer protokołu IP dla GRE? | 47
+@card Czy GRE szyfruje? | Nie – tylko enkapsuluje; szyfrowanie dodaje IPsec.
+@card Dlaczego łączy się GRE z IPsec? | GRE przenosi multicast (protokoły routingu), IPsec zapewnia szyfrowanie.
+@card Składniki DMVPN? | mGRE, NHRP, IPsec (plus protokół routingu).
+@card Do czego służy NHRP w DMVPN? | Spoke rejestrują adresy u huba i odpytują go o adresy innych spoke.
+@card Ile bajtów narzutu dodaje GRE (bez IPsec)? | 24 B (20 B IP + 4 B GRE).
+@card Czym VTI różni się od crypto map? | Ruch do tunelu kieruje routing, a nie crypto ACL.
+@quiz Firma chce uruchomić OSPF między lokalizacjami przez Internet z szyfrowaniem. Co wybrać?
+- Sam IPsec z crypto map
++ GRE over IPsec lub VTI
+- Sam GRE
+- PAT
+= Klasyczny IPsec (crypto map) nie przenosi multicastu; GRE lub VTI to umożliwiają, IPsec szyfruje.
+@quiz Która technologia pozwala oddziałom tworzyć dynamiczne tunele bezpośrednio między sobą?
+- GRE point-to-point
++ DMVPN
+- Site-to-site crypto map
+- Clientless SSL VPN
+= DMVPN (mGRE + NHRP) zestawia tunele spoke-to-spoke na żądanie.
+@quiz Jaki protokół w DMVPN pozwala spoke odkryć publiczny adres innego spoke?
+- OSPF
+- IKE
++ NHRP
+- ARP
+= NHRP działa jak „ARP dla tuneli” – hub jest serwerem NHRP (NHS).
+@quiz Tunel GRE flapuje, w logach widać „recursive routing”. Przyczyna?
++ Trasa do tunnel destination jest uczona przez sam tunel
+- Brak szyfrowania IPsec
+- Zły klucz PSK
+- Niezgodne MTU na LAN
+= Gdy trasa do celu tunelu wskazuje na tunel, tunel się wyłącza – trzeba zapewnić trasę przez fizyczny interfejs.
+
+@topic ravpn | VPN zdalnego dostępu: IPsec i SSL/TLS
+## SSL/TLS VPN
+- Działa na **TCP 443** (HTTPS), opcjonalnie **DTLS (UDP 443)** dla lepszej wydajności
+- Łatwo przechodzi przez firewalle i NAT (port 443 zwykle otwarty)
+- **Clientless** – przez przeglądarkę, portal WWW; dostęp ograniczony do aplikacji webowych/zakładek
+- **Client-based (full tunnel)** – klient (Cisco Secure Client) tworzy wirtualną kartę, pełny dostęp IP
+## IPsec remote access
+- Klient z obsługą **IKEv2/IPsec** (np. Secure Client)
+- Wymaga przepuszczenia UDP 500/4500 i ESP – czasem blokowane w hotelach
+## Porównanie
+| SSL/TLS | port 443, przeglądarka lub klient, łatwe wdrożenie
+| IPsec | klient VPN, pełny dostęp, silne uwierzytelnianie
+## Split tunneling
+- **Split tunnel** – do sieci firmy przez VPN, do Internetu bezpośrednio (mniej obciąża łącze firmy, ale mniejsza kontrola)
+- **Full tunnel** – cały ruch przez VPN (lepsza kontrola i inspekcja)
+## Uwierzytelnianie
+- Często przez **AAA (RADIUS)**, z **MFA** i certyfikatami
+- Koncentrator VPN: ASA, Firepower, router
+@card Na jakim porcie działa SSL/TLS VPN? | TCP 443 (opcjonalnie DTLS na UDP 443).
+@card Co to jest clientless SSL VPN? | Dostęp przez przeglądarkę do portalu – bez instalacji klienta, ograniczony do aplikacji webowych.
+@card Czym jest split tunneling? | Do firmy ruch idzie tunelem, do Internetu bezpośrednio.
+@card Dlaczego SSL VPN łatwiej przechodzi przez firewalle? | Używa portu 443, który zwykle jest otwarty.
+@quiz Kontrahent ma mieć dostęp tylko do firmowej aplikacji WWW, bez instalowania oprogramowania. Co wybrać?
++ Clientless SSL VPN
+- Site-to-site IPsec
+- IPsec remote access z klientem
+- GRE
+= Clientless SSL VPN działa w przeglądarce i dobrze nadaje się do dostępu do aplikacji webowych.
+@quiz Firma chce, by cały ruch zdalnych pracowników, także do Internetu, przechodził przez firewall firmowy. Jaka konfiguracja?
+- Split tunneling
++ Full tunnel
+- Clientless
+- DMVPN
+= Full tunnel kieruje cały ruch przez VPN, umożliwiając inspekcję.
+@quiz Który protokół transportowy/port zwykle wykorzystuje VPN TLS?
+- UDP 500
++ TCP 443
+- IP 50
+- TCP 23
+= TLS VPN działa jak HTTPS na porcie 443.
+
+@quiz Która zaleta split tunnelingu jest prawdziwa?
++ Ruch do Internetu nie obciąża łącza i koncentratora VPN firmy
+- Cały ruch użytkownika jest kontrolowany przez firmowy firewall
+- Nie wymaga uwierzytelniania
+- Szyfruje ruch internetowy użytkownika
+= Przy split tunnelingu ruch internetowy idzie bezpośrednio – mniejsze obciążenie, ale mniejsza kontrola.
+
+@topic providervpn | VPN operatora: MPLS i SD-WAN
+## MPLS
+- Przekazywanie po **etykietach** (label) zamiast pełnego wyszukiwania IP
+- Routery: **CE** (klient), **PE** (brzeg operatora), **P** (rdzeń operatora)
+## MPLS L3VPN
+- CE wymienia trasy z PE (statycznie, OSPF, BGP…)
+- PE trzyma trasy każdego klienta w osobnym **VRF**; między PE – **MP-BGP**
+- Klienci mogą mieć nakładające się adresy; operator uczestniczy w routingu
+## MPLS L2VPN
+- Operator zachowuje się jak przełącznik/kabel – klient sam robi routing
+- **VPWS** – punkt-punkt (pseudowire)
+- **VPLS** – wielopunktowy, emuluje przełącznik Ethernet
+## Szyfrowanie
+- MPLS VPN **separuje**, ale **nie szyfruje** – do poufności dodaje się IPsec
+## SD-WAN
+- Nakładka z **szyfrowanych tuneli IPsec** na dowolnym transporcie (MPLS, Internet, LTE/5G)
+- Centralne zarządzanie i polityki, wybór ścieżki według aplikacji (app-aware routing)
+| SD-WAN Manager (vManage) | zarządzanie, GUI
+| SD-WAN Controller (vSmart) | płaszczyzna sterowania, polityki (OMP)
+| SD-WAN Validator (vBond) | uwierzytelnienie i orkiestracja urządzeń
+| WAN Edge | routery w lokalizacjach – płaszczyzna danych
+@card Role routerów w MPLS? | CE – klient, PE – brzeg operatora, P – rdzeń operatora.
+@card Gdzie przechowywane są trasy klienta w MPLS L3VPN? | W osobnym VRF na routerze PE.
+@card Czym różni się VPLS od VPWS? | VPLS – wielopunktowy (jak switch); VPWS – punkt-punkt (jak kabel).
+@card Czym szyfrowane są tunele SD-WAN? | IPsec.
+@card Który komponent SD-WAN odpowiada za płaszczyznę sterowania? | SD-WAN Controller (vSmart).
+@quiz W której usłudze operator uczestniczy w routingu klienta?
++ MPLS L3VPN
+- VPLS
+- VPWS
+- Dark fiber
+= W L3VPN CE wymienia trasy z PE; w L2VPN operator przenosi ramki, a routing robi klient.
+@quiz Który komponent Cisco SD-WAN zapewnia graficzne zarządzanie i konfigurację?
++ SD-WAN Manager (vManage)
+- SD-WAN Validator (vBond)
+- SD-WAN Controller (vSmart)
+- WAN Edge
+= vManage to centralny interfejs zarządzania.
+@quiz Firma przesyła poufne dane przez MPLS L3VPN operatora. Co jest prawdą?
+- MPLS szyfruje dane etykietami
++ Ruch jest odseparowany, ale niezaszyfrowany – do poufności trzeba dodać np. IPsec
+- VRF szyfruje ruch AES
+- L3VPN używa TLS
+= Etykiety i VRF zapewniają separację, nie poufność.
+
+@topic acl | Listy kontroli dostępu (ACL)
+## Typy
+| Standardowe | 1–99, 1300–1999; tylko adres źródłowy
+| Rozszerzone | 100–199, 2000–2699; protokół, źródło, cel, porty
+| Nazwane | standardowe lub rozszerzone, z numerami sekwencyjnymi
+## Zasady
+- Sprawdzane **od góry**, pierwsze dopasowanie kończy przetwarzanie
+- Na końcu **niejawne deny any** – ACL bez żadnego permit blokuje wszystko
+- **Jedna ACL na interfejs, kierunek i protokół**
+- Standardowe – **blisko celu**; rozszerzone – **blisko źródła**
+- ACL wyjściowa nie filtruje ruchu generowanego przez sam router
+## Wildcard
+- 0 = bit musi się zgadzać, 1 = dowolny
+- `host 10.1.1.1` = 10.1.1.1 0.0.0.0; `any` = 0.0.0.0 255.255.255.255
+## Przykłady
+> access-list 10 permit 192.168.1.0 0.0.0.255
+> access-list 100 deny tcp any host 10.0.0.10 eq 23
+> access-list 100 permit ip any any
+> ip access-list extended WEB
+>  10 permit tcp 192.168.1.0 0.0.0.255 any eq 443
+>  20 deny ip any any log
+> interface g0/1
+>  ip access-group 100 in
+> line vty 0 15
+>  access-class 10 in
+@card Gdzie umieszczać ACL standardowe? | Jak najbliżej celu.
+@card Gdzie umieszczać ACL rozszerzone? | Jak najbliżej źródła.
+@card Co jest na końcu każdej ACL? | Niejawne deny any.
+@card Zakres numerów ACL rozszerzonych? | 100–199 i 2000–2699
+@card Jak ograniczyć dostęp SSH do routera z jednej sieci? | access-class <ACL> in pod line vty.
+@card Wildcard dla jednego hosta? | 0.0.0.0 (słowo host)
+@quiz ACL zawiera tylko „access-list 5 deny 10.1.1.0 0.0.0.255”. Co z resztą ruchu?
+- Jest przepuszczany
++ Jest blokowany przez niejawne deny any
+- Router zgłasza błąd
+- ACL jest ignorowana
+= Każda ACL kończy się niejawnym deny any – trzeba dodać permit.
+@quiz Która wildcard dopasuje sieć 172.16.0.0/20?
+- 0.0.240.255
++ 0.0.15.255
+- 255.255.240.0
+- 0.0.16.255
+= 255.255.255.255 − 255.255.240.0 = 0.0.15.255.
+@quiz Ile ACL IPv4 można przypisać do jednego interfejsu w kierunku in?
++ 1
+- 2
+- 4
+- dowolnie wiele
+= Jedna ACL na interfejs, kierunek i protokół.
+@quiz Który wpis blokuje Telnet do serwera 10.0.0.5 z dowolnego źródła?
++ access-list 101 deny tcp any host 10.0.0.5 eq 23
+- access-list 1 deny host 10.0.0.5
+- access-list 101 deny udp any host 10.0.0.5 eq 23
+- access-list 101 deny tcp host 10.0.0.5 any eq 23
+= Telnet to TCP 23, a 10.0.0.5 jest celem (drugi adres).
+
+@quiz Gdzie najlepiej umieścić rozszerzoną ACL blokującą ruch z sieci A do serwera B?
++ Na interfejsie najbliżej sieci A, w kierunku in
+- Na interfejsie najbliżej serwera B, w kierunku out
+- Na każdym routerze po drodze
+- Na linii vty
+= Rozszerzoną ACL umieszcza się blisko źródła, by nie przesyłać ruchu, który i tak zostanie odrzucony.
+
+@topic l2sec | Bezpieczeństwo warstwy 2
+## Port security
+- Ogranicza liczbę/adresy MAC na porcie (tylko porty access lub trunk ustawione statycznie)
+- Domyślnie: **max 1 MAC**, reakcja **shutdown**
+| protect | odrzuca, bez logu, bez licznika
+| restrict | odrzuca, loguje, zwiększa licznik naruszeń
+| shutdown | port w err-disabled (domyślne)
+- **sticky** – nauczone MAC trafiają do running-config
+- Chroni przed **MAC flooding** (przepełnienie tablicy CAM)
+## DHCP snooping
+- Porty **trusted** (do serwera DHCP, uplinki) i **untrusted** (domyślnie)
+- Na untrusted odrzuca komunikaty serwera (**OFFER, ACK, NAK**) → chroni przed fałszywym serwerem DHCP
+- Buduje **tablicę powiązań** (MAC, IP, VLAN, port); limit szybkości → ochrona przed **DHCP starvation**
+## Dynamic ARP Inspection (DAI)
+- Sprawdza ARP z portów untrusted z tablicą DHCP snooping → chroni przed **ARP spoofing/poisoning**
+- Domyślny limit na untrusted: 15 pakietów ARP/s
+## Inne ataki L2 i obrona
+| VLAN hopping – switch spoofing | wyłącz DTP (nonegotiate), porty access statycznie
+| VLAN hopping – double tagging | natywny VLAN = nieużywany, nie VLAN 1
+| Fałszywy root STP | BPDU Guard, Root Guard
+@card Domyślna reakcja port security? | shutdown (err-disabled)
+@card Który tryb port security loguje, ale nie wyłącza portu? | restrict
+@card Przed czym chroni DHCP snooping? | Fałszywym serwerem DHCP i wyczerpaniem puli (starvation).
+@card Na podstawie czego DAI weryfikuje ARP? | Tablicy powiązań DHCP snooping.
+@card Jak zapobiec atakowi double tagging? | Ustawić natywny VLAN na nieużywany (nie VLAN 1).
+@card Co robi port security sticky? | Zapisuje nauczone MAC w konfiguracji.
+@quiz Port ma port security z violation restrict. Pojawia się drugi MAC. Co się dzieje?
+- Port przechodzi w err-disabled
++ Ramki są odrzucane, generowany jest log i rośnie licznik naruszeń
+- Ramki są przepuszczane
+- Odrzucane bez logów i licznika
+= restrict odrzuca i loguje; protect odrzuca po cichu; shutdown wyłącza port.
+@quiz Które komunikaty DHCP snooping odrzuca na porcie untrusted? (wybierz dwie)
++ DHCPOFFER
++ DHCPACK
+- DHCPDISCOVER
+- DHCPREQUEST
+= Na untrusted nie mogą pojawiać się odpowiedzi serwera (OFFER, ACK, NAK).
+@quiz Który mechanizm chroni przed ARP poisoning?
+- Port security
++ Dynamic ARP Inspection
+- BPDU Guard
+- PortFast
+= DAI sprawdza zgodność ARP z tablicą DHCP snooping.
+@quiz Który atak polega na zapełnieniu tablicy MAC switcha fałszywymi adresami?
++ MAC flooding
+- DHCP spoofing
+- Double tagging
+- Smishing
+= Po przepełnieniu CAM switch zalewa ramki jak hub – obrona: port security.
+
+@topic aaa | AAA, RADIUS, TACACS+ i 802.1X
+## AAA
+- **Authentication** – kim jesteś
+- **Authorization** – co możesz zrobić
+- **Accounting** – co zrobiłeś (rozliczalność, logi)
+## RADIUS vs TACACS+
+| RADIUS | UDP 1812/1813 (dawniej 1645/1646), szyfruje tylko hasło, łączy uwierzytelnianie i autoryzację, standard – dostęp do sieci (802.1X, VPN)
+| TACACS+ | TCP 49, szyfruje cały ładunek, rozdziela A/A/A, autoryzacja poleceń – administracja urządzeniami
+- Serwer AAA Cisco: **ISE**
+> aaa new-model
+> aaa authentication login default group tacacs+ local
+## 802.1X (kontrola dostępu do portu)
+| Supplicant | klient (laptop, telefon)
+| Authenticator | switch lub WLC
+| Authentication server | serwer RADIUS (np. ISE)
+- Między klientem a switchem: **EAPoL**; między switchem a serwerem: **RADIUS**
+- Do czasu uwierzytelnienia port przepuszcza tylko EAPoL
+- **MAB** – uwierzytelnienie po adresie MAC dla urządzeń bez 802.1X (drukarki)
+@card Co oznaczają trzy A w AAA? | Authentication, Authorization, Accounting
+@card Port i protokół TACACS+? | TCP 49
+@card Porty RADIUS? | UDP 1812 (uwierzytelnianie) i 1813 (accounting).
+@card Który protokół szyfruje cały ładunek: RADIUS czy TACACS+? | TACACS+ (RADIUS szyfruje tylko hasło).
+@card Role w 802.1X? | Supplicant, authenticator, authentication server.
+@card Jaki protokół działa między supplicantem a authenticatorem? | EAPoL (EAP over LAN).
+@quiz Administratorzy mają mieć różne uprawnienia do poszczególnych poleceń IOS. Który protokół?
+- RADIUS
++ TACACS+
+- LDAP
+- SNMP
+= TACACS+ rozdziela autoryzację i pozwala kontrolować pojedyncze polecenia.
+@quiz Którą rolę w 802.1X pełni przełącznik dostępowy?
+- Supplicant
++ Authenticator
+- Authentication server
+- Proxy DHCP
+= Switch (lub WLC) przekazuje dane uwierzytelniające do serwera RADIUS.
+@quiz Która część AAA rejestruje, jakie polecenia wykonał administrator?
+- Authentication
+- Authorization
++ Accounting
+- Auditing
+= Accounting odpowiada za rozliczalność i zapis działań.
+@quiz Które cechy dotyczą RADIUS? (wybierz dwie)
++ Używa UDP
++ Szyfruje tylko hasło w pakiecie
+- Używa TCP 49
+- Rozdziela uwierzytelnianie i autoryzację
+= RADIUS: UDP, szyfruje hasło, łączy uwierzytelnianie z autoryzacją.
+
+@topic wlansec | Bezpieczeństwo sieci bezprzewodowych
+## Uwierzytelnianie
+- **Open** – bez uwierzytelniania
+- **Personal (PSK)** – wspólne hasło
+- **Enterprise (802.1X/EAP)** – indywidualne poświadczenia przez serwer RADIUS
+## Standardy
+| WEP | RC4, złamany – nie używać
+| WPA | TKIP (RC4) – rozwiązanie przejściowe
+| WPA2 | 802.11i, **AES-CCMP**
+| WPA3 | **SAE**, obowiązkowe **PMF**, **GCMP-256** w trybie 192-bit (Enterprise)
+## WPA3
+- **SAE** (Simultaneous Authentication of Equals) zastępuje PSK → odporność na **ataki słownikowe offline**, **forward secrecy**
+- **PMF** (Protected Management Frames) – ochrona ramek zarządzających (np. deauth)
+- **Enhanced Open (OWE)** – szyfrowanie w sieciach otwartych
+## Metody EAP
+| EAP-TLS | certyfikaty klienta i serwera – najbezpieczniejsza
+| PEAP | certyfikat serwera, tunel TLS, wewnątrz np. MSCHAPv2
+| EAP-FAST | Cisco, tunel z PAC zamiast certyfikatów
+| LEAP | stary, Cisco, słaby
+## Klucze
+- **4-way handshake** – wyprowadza klucze sesji (PTK dla unicast, GTK dla broadcast/multicast)
+- Ukrywanie SSID i filtrowanie MAC to słabe zabezpieczenia
+@card Jakie szyfrowanie używa WPA2? | AES-CCMP
+@card Co zastępuje PSK w WPA3-Personal? | SAE (Simultaneous Authentication of Equals).
+@card Co chroni PMF? | Ramki zarządzające (np. deauthentication).
+@card Która metoda EAP wymaga certyfikatów po obu stronach? | EAP-TLS
+@card Czym różni się WPA2-Personal od WPA2-Enterprise? | Personal – wspólne hasło (PSK); Enterprise – 802.1X z serwerem RADIUS.
+@quiz Która funkcja WPA3 chroni przed offline’owymi atakami słownikowymi na hasło sieci?
++ SAE
+- TKIP
+- PMF
+- WPS
+= SAE uniemożliwia przechwycenie handshake’u i łamanie hasła offline.
+@quiz Firma chce, aby każdy pracownik logował się do Wi-Fi swoim kontem domenowym. Co wybrać?
+- WPA2-Personal
++ WPA2/WPA3-Enterprise z 802.1X
+- Open z ukrytym SSID
+- WEP
+= Tryb Enterprise uwierzytelnia indywidualnie przez serwer RADIUS.
+@quiz Który mechanizm szyfrowania jest wymagany w WPA2?
+- TKIP
++ AES-CCMP
+- RC4
+- DES
+= WPA2 (802.11i) używa AES-CCMP.
+@quiz Która metoda EAP uznawana jest za najbezpieczniejszą?
++ EAP-TLS
+- LEAP
+- PEAP z MSCHAPv2
+- EAP-MD5
+= EAP-TLS uwierzytelnia obie strony certyfikatami.

@@ -1,0 +1,414 @@
+#! Obszar 3 – IP Connectivity (25%)
+@domain 3 | Łączność IP (routing) | 25
+
+@topic rtable | Tablica routingu
+## Elementy wpisu
+> O    10.2.0.0/16 [110/20] via 10.0.12.2, 00:05:11, GigabitEthernet0/0
+- **Kod protokołu** (O = OSPF)
+- **Prefiks i długość maski** (10.2.0.0/16)
+- **[AD/metryka]** – 110 to dystans administracyjny, 20 to koszt
+- **Next hop** (via 10.0.12.2) i interfejs wyjściowy
+- **Gateway of last resort** – trasa domyślna, jeśli istnieje
+## Kody
+| C | sieć podłączona bezpośrednio
+| L | adres lokalny interfejsu (/32)
+| S / S* | statyczna / statyczna domyślna
+| O / O IA | OSPF w obszarze / między obszarami
+| O E1 / O E2 | OSPF zewnętrzna
+| D / D EX | EIGRP / EIGRP zewnętrzna
+| R | RIP
+| B | BGP
+## Dystans administracyjny (AD)
+| Podłączona | 0
+| Statyczna | 1
+| eBGP | 20
+| EIGRP (wewn.) | 90
+| OSPF | 110
+| IS-IS | 115
+| RIP | 120
+| EIGRP (zewn.) | 170
+| iBGP | 200
+| Nieosiągalna | 255
+@card AD trasy OSPF? | 110
+@card AD trasy statycznej? | 1
+@card AD EIGRP wewnętrznego? | 90
+@card AD RIP? | 120
+@card AD eBGP i iBGP? | 20 i 200
+@card Co oznacza kod L w tablicy routingu? | Lokalny adres interfejsu (trasa /32).
+@card Co oznacza [110/20] we wpisie? | AD = 110, metryka (koszt) = 20.
+@quiz Co oznacza liczba 110 we wpisie „O 10.1.0.0/16 [110/65]”?
++ Dystans administracyjny
+- Metrykę
+- Liczbę skoków
+- Czas od nauczenia trasy
+= Pierwsza wartość w nawiasie to AD, druga to metryka.
+@quiz Która trasa ma najniższy dystans administracyjny?
+- OSPF
+- EIGRP
++ eBGP
+- RIP
+= eBGP 20, EIGRP 90, OSPF 110, RIP 120.
+@quiz Jaki AD ma trasa, której router nigdy nie użyje?
+- 0
+- 254
++ 255
+- 200
+= AD 255 oznacza trasę nieufną – nie trafia do tablicy routingu.
+
+@topic forwarding | Jak router wybiera trasę
+## Kolejność decyzji
+1. **Najdłuższe dopasowanie prefiksu (longest prefix match)** – zawsze pierwsze
+2. Przy tym samym prefiksie z różnych źródeł → **najniższy AD** (decyduje, co trafi do tablicy)
+3. Przy tym samym protokole → **najniższa metryka**
+4. Równe metryki → równoważenie obciążenia (ECMP)
+## Przykład
+- Trasy: 10.0.0.0/8 (S), 10.1.0.0/16 (O), 10.1.1.0/24 (R)
+- Pakiet do 10.1.1.5 → wybrana **/24 (RIP)**, mimo wyższego AD – bo jest najdłuższa
+- Pakiet do 10.1.2.5 → /16 (OSPF)
+- Pakiet do 10.9.9.9 → /8 (statyczna)
+## Przekazywanie
+- Router zmienia ramkę L2 (nowe MAC), zmniejsza **TTL** o 1, przelicza sumę kontrolną nagłówka IP
+- Adresy IP źródłowy/docelowy się nie zmieniają (bez NAT)
+- TTL = 0 → pakiet odrzucony, ICMP Time Exceeded (tak działa traceroute)
+@card Co router sprawdza najpierw przy wyborze trasy? | Najdłuższe dopasowanie prefiksu.
+@card Kiedy decyduje AD? | Gdy ten sam prefiks (ta sama długość) pochodzi z różnych źródeł.
+@card Co router zmienia w pakiecie przy przekazywaniu? | TTL (−1) i sumę kontrolną; ramkę L2 tworzy na nowo.
+@card Co się dzieje, gdy TTL spadnie do 0? | Pakiet jest odrzucany, nadawca dostaje ICMP Time Exceeded.
+@quiz Router ma trasy: S 172.16.0.0/16, O 172.16.4.0/22, D 172.16.4.0/24. Którędy pójdzie pakiet do 172.16.4.10?
+- Statyczną /16
+- OSPF /22
++ EIGRP /24
+- Trasą domyślną
+= Wygrywa najdłuższy pasujący prefiks: /24.
+@quiz Ten sam prefiks 10.5.0.0/16 jest znany z OSPF i EIGRP. Która trasa trafi do tablicy?
+- OSPF
++ EIGRP
+- Obie (równoważenie)
+- Żadna
+= Przy identycznym prefiksie decyduje AD: EIGRP 90 < OSPF 110.
+@quiz Co router zmienia w nagłówku IP przekazywanego pakietu (bez NAT)?
+- Adres źródłowy
+- Adres docelowy
++ TTL
+- Numer portu
+= TTL jest zmniejszany o 1 (i przeliczana suma kontrolna nagłówka).
+
+@topic static | Routing statyczny IPv4 i IPv6
+## Rodzaje
+- **Sieciowa** – `ip route 10.2.0.0 255.255.0.0 10.0.12.2`
+- **Domyślna** – `ip route 0.0.0.0 0.0.0.0 203.0.113.1` (kod S*)
+- **Hostowa** – maska 255.255.255.255 (/32)
+- **Pływająca (floating)** – z wyższym AD jako zapas: `ip route 0.0.0.0 0.0.0.0 10.9.9.1 200`
+## Next hop
+- Adres next hop → wymaga rekurencyjnego wyszukiwania
+- Interfejs wyjściowy → trasa traktowana jak podłączona; na Ethernecie wymaga proxy ARP – unikać
+- **W pełni określona** – interfejs + next hop (zalecane na Ethernecie)
+## IPv6
+> ipv6 route 2001:db8:2::/64 2001:db8:12::2
+> ipv6 route ::/0 g0/0 fe80::2
+- Gdy next hop to **link-local**, trzeba podać interfejs wyjściowy
+> show ip route static
+> show ipv6 route static
+@card Jak skonfigurować trasę domyślną IPv4? | ip route 0.0.0.0 0.0.0.0 <next-hop>
+@card Czym jest trasa pływająca? | Statyczna trasa zapasowa z AD wyższym niż trasa główna.
+@card Kiedy w trasie IPv6 trzeba podać interfejs? | Gdy next hop jest adresem link-local.
+@card Jaka maska oznacza trasę hostową? | 255.255.255.255 (/32)
+@quiz Główna trasa to OSPF. Jaki AD powinna mieć zapasowa trasa statyczna?
+- 1
+- 100
++ 120
+- 90
+= Trasa pływająca musi mieć AD wyższy niż OSPF (110), np. 120.
+@quiz Które polecenie poprawnie tworzy domyślną trasę IPv6 przez link-local?
+- ipv6 route ::/0 fe80::1
++ ipv6 route ::/0 g0/1 fe80::1
+- ipv6 route 0.0.0.0 fe80::1
+- ip route ::/0 g0/1
+= Adres link-local jest niejednoznaczny bez interfejsu wyjściowego.
+@quiz Jak oznaczona jest statyczna trasa domyślna w tablicy routingu?
+- S
++ S*
+- C
+- D*
+= Gwiazdka oznacza kandydata na trasę domyślną.
+
+@quiz Trasa statyczna z next hop 10.0.0.2 nie pojawia się w tablicy routingu. Najczęstsza przyczyna?
++ Router nie ma trasy do 10.0.0.2 (interfejs w tej sieci jest down)
+- Brak polecenia ip routing na routerze
+- AD trasy statycznej to 1
+- Trasa statyczna wymaga OSPF
+= Trasa trafia do tablicy tylko, gdy next hop jest osiągalny.
+
+@topic ospf | OSPFv2 – podstawy
+## Cechy
+- Protokół **stanu łącza (link-state)**, algorytm **SPF (Dijkstra)**
+- Protokół IP nr **89**; multicast **224.0.0.5** (wszystkie routery OSPF), **224.0.0.6** (DR/BDR)
+- Metryka: **koszt = pasmo referencyjne / pasmo interfejsu** (domyślnie 100 Mb/s; min. 1)
+- Obszary; **obszar 0 = backbone**; ABR łączy obszary, ASBR redystrybuuje trasy zewnętrzne
+- Na CCNA: **OSPF jednoobszarowy**
+## Router ID (w tej kolejności)
+1. Ręczny `router-id`
+2. Najwyższy adres IP interfejsu **loopback** (aktywnego)
+3. Najwyższy adres IP aktywnego interfejsu fizycznego
+- Zmiana RID wymaga `clear ip ospf process`
+## Konfiguracja
+> router ospf 1
+>  router-id 1.1.1.1
+>  network 10.0.12.0 0.0.0.3 area 0
+>  passive-interface g0/1
+>  default-information originate
+- Lub na interfejsie: `ip ospf 1 area 0`
+- **passive-interface** – sieć jest ogłaszana, ale bez hello (bez sąsiadów)
+## Koszty przy 100 Mb/s referencji
+| 10 Mb/s | 10
+| 100 Mb/s | 1
+| 1 Gb/s | 1 (!)
+- Dlatego zmienia się `auto-cost reference-bandwidth` (identycznie na wszystkich routerach)
+@card Jaki multicast używa OSPF dla wszystkich routerów? | 224.0.0.5
+@card Jaki multicast używa OSPF dla DR/BDR? | 224.0.0.6
+@card Numer protokołu IP dla OSPF? | 89
+@card Jak liczony jest koszt OSPF? | Pasmo referencyjne / pasmo interfejsu (domyślnie 100 Mb/s / pasmo).
+@card Kolejność wyboru OSPF Router ID? | Ręczny → najwyższy loopback → najwyższy aktywny interfejs.
+@card Co robi passive-interface w OSPF? | Ogłasza sieć interfejsu, ale nie wysyła hello (brak sąsiedztwa).
+@quiz Router nie ma router-id ani loopbacków. Interfejsy: 10.1.1.1, 192.168.5.1, 172.16.0.1. Jaki będzie RID?
+- 10.1.1.1
++ 192.168.5.1
+- 172.16.0.1
+- 0.0.0.0
+= Bez ręcznego RID i loopbacków wybierany jest najwyższy adres aktywnego interfejsu.
+@quiz Jaki jest koszt OSPF interfejsu FastEthernet przy domyślnym paśmie referencyjnym?
++ 1
+- 10
+- 19
+- 100
+= 100 Mb/s / 100 Mb/s = 1.
+@quiz Które polecenie włączy OSPF dokładnie na interfejsie 10.0.0.1?
+- network 10.0.0.0 0.0.0.255 area 0
++ network 10.0.0.1 0.0.0.0 area 0
+- network 10.0.0.1 255.255.255.255 area 0
+- network 10.0.0.0 area 0
+= Wildcard 0.0.0.0 dopasowuje dokładnie ten jeden adres.
+@quiz Jak rozgłosić trasę domyślną do OSPF?
+- redistribute static
++ default-information originate
+- ip default-network
+- network 0.0.0.0 255.255.255.255 area 0
+= default-information originate ogłasza 0.0.0.0/0 (gdy istnieje w tablicy).
+
+@quiz Który router w OSPF łączy obszar 0 z innym obszarem?
++ ABR
+- ASBR
+- DR
+- BDR
+= ABR (Area Border Router) ma interfejsy w kilku obszarach, w tym w backbone.
+
+@topic ospfnbr | OSPF – sąsiedztwo i DR/BDR
+## Stany sąsiedztwa
+- **Down → Init → 2-Way → ExStart → Exchange → Loading → Full**
+- 2-Way: dwukierunkowa komunikacja (widzę swój RID w hello sąsiada); tu odbywa się wybór DR/BDR
+- ExStart/Exchange: wymiana DBD; Loading: LSR/LSU; Full: bazy zsynchronizowane
+- DROTHER-y między sobą pozostają w **2-WAY** (to normalne)
+## Warunki sąsiedztwa
+- Ta sama **podsieć i maska**
+- Ten sam **obszar**
+- Te same **timery hello/dead**
+- Zgodne uwierzytelnianie i flagi obszaru (stub)
+- **Unikalne Router ID**
+- Zgodne **MTU** (inaczej utknie w ExStart/Exchange)
+- Interfejs nie jest pasywny
+## Typy sieci
+| Broadcast (Ethernet) | DR/BDR, hello 10 s, dead 40 s
+| Point-to-point (serial) | bez DR/BDR, hello 10 s, dead 40 s
+| NBMA | DR/BDR, hello 30 s, dead 120 s
+## Wybór DR/BDR
+- Najwyższy **priorytet** interfejsu (domyślnie 1, zakres 0–255)
+- Remis → najwyższy **Router ID**
+- Priorytet **0** = nigdy DR/BDR
+- Wybór **nie jest wywłaszczający** – nowy router o wyższym priorytecie nie przejmie roli
+- Na Ethernet między dwoma routerami można ustawić `ip ospf network point-to-point`
+## Typy LSA
+| 1 Router | każdy router w obszarze
+| 2 Network | DR w sieci broadcast
+| 3 Summary | ABR, trasy między obszarami
+| 4 ASBR Summary | ABR, droga do ASBR
+| 5 External | ASBR, trasy zewnętrzne
+| 7 NSSA | trasy zewnętrzne w NSSA
+> show ip ospf neighbor
+> show ip ospf interface brief
+@card Kolejność stanów sąsiedztwa OSPF? | Down, Init, 2-Way, ExStart, Exchange, Loading, Full
+@card Jaki stan łączy dwa DROTHER-y? | 2-WAY (to normalne).
+@card Domyślne timery OSPF na Ethernet? | Hello 10 s, dead 40 s
+@card Jak wybierany jest DR? | Najwyższy priorytet interfejsu, przy remisie najwyższy Router ID.
+@card Co oznacza priorytet OSPF 0? | Router nigdy nie zostanie DR ani BDR.
+@card Kto generuje LSA typu 2? | DR w sieci broadcast/NBMA.
+@card Sąsiedztwo utknęło w ExStart. Typowa przyczyna? | Niezgodne MTU.
+@quiz Dwa routery nie tworzą sąsiedztwa OSPF. Co może być przyczyną? (wybierz dwie)
++ Różne timery hello/dead
++ Różne numery obszaru na łączu
+- Różne numery procesu OSPF
+- Różne koszty interfejsów
+= Numer procesu jest lokalny, a koszt nie wpływa na sąsiedztwo. Timery i obszar muszą się zgadzać.
+@quiz Routery mają priorytety 1, 1, 100, 0 i RID 1.1.1.1, 2.2.2.2, 3.3.3.3, 4.4.4.4. Który zostanie DR?
+- 4.4.4.4
++ 3.3.3.3
+- 2.2.2.2
+- 1.1.1.1
+= Najwyższy priorytet (100) ma 3.3.3.3. 4.4.4.4 z priorytetem 0 nie może być DR.
+@quiz W sieci działa DR. Dołącza router z wyższym priorytetem. Co się stanie?
++ Stary DR pozostaje DR-em
+- Nowy router natychmiast zostaje DR
+- Odbywa się ponowny wybór
+- Nowy router zostaje BDR i wymusza wybór
+= Wybór DR/BDR nie jest wywłaszczający.
+@quiz Który typ LSA opisuje trasy z innych obszarów?
+- Typ 1
+- Typ 2
++ Typ 3
+- Typ 5
+= LSA typu 3 (Summary) generuje ABR dla tras między obszarami.
+@quiz W którym stanie OSPF dokonuje się wybór DR/BDR?
+- Init
++ 2-Way
+- ExStart
+- Full
+= DR/BDR wybierane są po ustaleniu dwukierunkowej komunikacji (2-Way).
+
+@topic fhrp | FHRP – redundancja bramy
+## Problem
+- Hosty mają jedną bramę domyślną; awaria routera = brak dostępu
+- FHRP tworzy **wirtualny adres IP i MAC** współdzielony przez kilka routerów
+## HSRP (Cisco)
+- **Active / Standby**; priorytet domyślnie **100**, wyższy wygrywa (remis: wyższy IP)
+- **Preempt domyślnie wyłączony**
+- Hello 3 s, hold 10 s
+- Wirtualny MAC v1: **0000.0C07.ACxx** (xx = grupa), v2: **0000.0C9F.Fxxx**
+- Multicast v1: 224.0.0.2, v2: 224.0.0.102
+## VRRP (standard IEEE/IETF)
+- **Master / Backup**; priorytet domyślnie 100
+- **Preempt domyślnie włączony**
+- Wirtualny IP może być adresem interfejsu routera
+- MAC: **0000.5E00.01xx**; multicast 224.0.0.18
+## GLBP (Cisco)
+- **Równoważenie obciążenia** – jeden wirtualny IP, wiele wirtualnych MAC
+- AVG (gateway) przydziela MAC, do 4 AVF (forwarderów)
+> standby 1 ip 192.168.1.254
+> standby 1 priority 110
+> standby 1 preempt
+> show standby brief
+@card Role w HSRP? | Active i Standby
+@card Role w VRRP? | Master i Backup
+@card Który FHRP równoważy obciążenie z jednym wirtualnym IP? | GLBP
+@card Wirtualny MAC HSRPv1 grupy 1? | 0000.0C07.AC01
+@card Czy preempt jest domyślnie włączony w HSRP? | Nie (w VRRP tak).
+@card Domyślny priorytet HSRP? | 100
+@quiz R1 ma priorytet HSRP 120, R2 – 100, oba bez preempt. R1 restartuje się i wraca. Kto jest Active?
+- R1
++ R2
+- Oba
+- Żaden
+= Bez preempt R1 nie odbierze roli Active, którą przejął R2.
+@quiz Który protokół FHRP jest otwartym standardem?
+- HSRP
++ VRRP
+- GLBP
+- CDP
+= VRRP jest standardem IETF; HSRP i GLBP są własnością Cisco.
+@quiz Który adres MAC należy do VRRP?
+- 0000.0C07.AC0A
++ 0000.5E00.010A
+- 0007.B400.0A01
+- 0000.0C9F.F00A
+= VRRP używa 0000.5E00.01xx; 0000.0C07.ACxx to HSRPv1, 0007.B400 to GLBP.
+@quiz Która funkcja pozwala routerowi z wyższym priorytetem przejąć rolę Active w HSRP?
++ preempt
+- track
+- version 2
+- authentication
+= standby <grupa> preempt umożliwia przejęcie roli po powrocie routera.
+
+@topic routingpractice | Routing – zadania praktyczne
+## Jak czytać zadania egzaminacyjne
+- Najpierw znajdź **wszystkie trasy pasujące** do adresu docelowego
+- Wybierz **najdłuższy prefiks**
+- AD porównujesz tylko między trasami o **tym samym prefiksie**
+- Trasa domyślna (0.0.0.0/0) pasuje do wszystkiego, ale ma najkrótszy prefiks
+- Sprawdź, czy next hop jest osiągalny i czy interfejs jest up/up
+## Typowe pułapki
+- Trasa OSPF nie pojawia się: sąsiedztwo, passive-interface, zły wildcard w network, inny obszar
+- Asymetryczny routing: pakiet dociera, odpowiedź nie wraca (brak trasy powrotnej)
+- Zapomniany `no shutdown` lub `ip routing` (switch L3)
+@card Co porównuje się najpierw: AD czy długość prefiksu? | Długość prefiksu (longest match). AD tylko przy tym samym prefiksie.
+@card Ping wychodzi, ale nie wraca. Co sprawdzić? | Trasę powrotną na routerach po drodze i bramę na hoście docelowym.
+@card Sieć LAN nie jest ogłaszana w OSPF, choć interfejs jest up. Typowa przyczyna? | Brak polecenia network/ip ospf area obejmującego ten interfejs.
+@quiz Router ma trasy: 0.0.0.0/0 via A, 10.0.0.0/8 via B, 10.10.0.0/16 via C. Dokąd trafi pakiet do 10.20.1.1?
+- A
++ B
+- C
+- Zostanie odrzucony
+= 10.20.1.1 nie pasuje do 10.10.0.0/16; najdłuższe pasujące to 10.0.0.0/8 (B).
+@quiz Router ma trasy: S 192.168.0.0/16 [1/0] i O 192.168.1.0/24 [110/2]. Którędy pójdzie pakiet do 192.168.1.20?
+- Statyczną, bo ma niższy AD
++ OSPF, bo ma dłuższy prefiks
+- Obiema naraz
+- Trasą domyślną
+= Najdłuższe dopasowanie wygrywa przed AD.
+@quiz Dwie trasy OSPF do 10.1.0.0/16 mają koszty 20 i 20. Co zrobi router?
++ Zrówna obciążenie na obu (ECMP)
+- Użyje tej nauczonej wcześniej
+- Odrzuci obie
+- Użyje tej z niższym AD
+= Przy równym koszcie OSPF instaluje obie ścieżki (domyślnie do 4).
+@quiz Która trasa ma pierwszeństwo dla pakietu do 172.16.5.5: S 172.16.0.0/16 [1/0] czy D 172.16.5.0/24 [90/3072]?
+- S – niższy AD
++ D – dłuższy prefiks
+- Obie, równoważenie
+- Żadna, brak trasy domyślnej
+= Prefiks /24 jest dłuższy od /16.
+@quiz Jakie polecenie pokaże, którą trasą router wyśle pakiet do 10.1.1.1?
++ show ip route 10.1.1.1
+- show ip interface brief
+- show ip protocols
+- show arp
+= show ip route <adres> wskazuje najlepiej dopasowany wpis.
+@quiz Router ma tylko trasę domyślną i sieci podłączone. Pakiet do sieci, której nie zna, zostanie:
++ wysłany trasą domyślną
+- odrzucony z ICMP unreachable
+- rozesłany na wszystkie interfejsy
+- zbuforowany
+= Trasa domyślna obsługuje wszystkie nieznane cele.
+@quiz Interfejs OSPF jest w trybie passive. Co jest prawdą? (wybierz dwie)
++ Sieć interfejsu jest ogłaszana w OSPF
++ Na interfejsie nie powstanie sąsiedztwo
+- Interfejs jest wyłączony administracyjnie
+- Sieć interfejsu nie trafia do LSDB
+= passive-interface blokuje hello, ale sieć dalej jest ogłaszana.
+@quiz Pakiet z TTL=1 dociera do routera, który ma go przekazać dalej. Co zrobi router?
+- Przekaże go z TTL=0
++ Odrzuci go i wyśle ICMP Time Exceeded
+- Zwiększy TTL
+- Odeśle go do nadawcy bez zmian
+= Po zmniejszeniu TTL do 0 pakiet jest odrzucany.
+@quiz OSPF: R1 ma interfejs w area 0, R2 na tym samym łączu w area 1. Wynik?
+- Sąsiedztwo FULL
++ Brak sąsiedztwa
+- Sąsiedztwo 2-WAY
+- R1 zostanie ABR
+= Obszar musi się zgadzać po obu stronach łącza.
+@quiz Która trasa zostanie zainstalowana: OSPF 10.0.0.0/24 [110/5] czy statyczna 10.0.0.0/24 z AD 120?
++ OSPF
+- Statyczna
+- Obie
+- Żadna
+= Ten sam prefiks – decyduje AD: 110 < 120. Statyczna jest zapasowa (floating).
+@quiz Na switchu L3 skonfigurowano SVI, ale ruch między VLAN-ami nie działa. Czego brakuje najczęściej?
++ ip routing
+- spanning-tree portfast
+- vtp mode server
+- switchport nonegotiate
+= Bez ip routing switch L3 nie routuje między SVI.
+@quiz Które polecenie najlepiej sprawdzi, czy OSPF ma sąsiadów?
++ show ip ospf neighbor
+- show ip route
+- show running-config
+- show cdp neighbors
+= Lista sąsiadów i stan (FULL, 2WAY) są w show ip ospf neighbor.

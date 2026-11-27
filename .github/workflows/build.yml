@@ -16,7 +16,7 @@ jobs:
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
       - name: Testy i budowanie
-        run: ./gradlew --no-daemon testDebugUnitTest :app:assembleRelease :nettools:assembleRelease
+        run: ./gradlew --no-daemon testDebugUnitTest :app:assembleRelease :nettools:assembleRelease :ccna:assembleRelease
       - uses: actions/upload-artifact@v4
         with:
           name: vlsm-wear-apk
@@ -26,9 +26,14 @@ jobs:
           name: nettools-apk
           path: nettools/build/outputs/apk/release/nettools-release.apk
       - uses: actions/upload-artifact@v4
+        with:
+          name: ccna-apk
+          path: ccna/build/outputs/apk/release/ccna-release.apk
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: zrzuty-ekranow
           path: |
             app/build/screenshots/
             nettools/build/screenshots/
+            ccna/build/screenshots/

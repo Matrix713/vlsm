@@ -169,13 +169,40 @@ class CcnaScreenshotTest {
         capture("15_progress")
     }
 
-    @Test fun search() {
-        val vm = vm().apply { searchQuery = "NAT-T" }
+    @Test fun searchEmptyShowsSuggestions() {
+        val vm = vm().apply { runSearch("IKE"); searchQuery = "" }
         show(vm, Routes.SEARCH)
-        capture("16_search")
-        assertTrue(vm.search("NAT-T").any { it.topic.id == "ike" })
-        assertTrue(vm.search("dtp").any { it.topic.id == "trunk" })
-        assertNotNull(vm.library.topic("ipsec"))
+        compose.onNodeWithText("Wpisz / powiedz").assertExists()
+        capture("16_search_empty")
+        // Dotknięcie podpowiedzi uruchamia wyszukiwanie bez pisania
+        scrollAndClick("OSPF")
+        assertEquals("OSPF", vm.searchQuery)
+        capture("17_search_results")
+    }
+
+    @Test fun searchResultOpensTopicAtSection() {
+        val vm = vm().apply { runSearch("tryb tunelowy") }
+        show(vm, Routes.SEARCH)
+        scrollAndClick("IPsec – AH, ESP i tryby")
+        compose.waitForIdle()
+        // Lista przewinięta do sekcji o trybie tunelowym, z podświetleniem
+        compose.onNodeWithText("Tryb tunelowy (tunnel mode)").assertExists()
+        capture("18_search_topic_jump")
+    }
+
+    @Test fun searchOpensQuestionAndCard() {
+        val vm = vm().apply { runSearch("aggressive mode") }
+        val r = vm.results()
+        assertTrue(r.questions.isNotEmpty())
+        assertTrue(r.cards.isNotEmpty())
+        show(vm, Routes.SEARCH)
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText("Pytania", substring = true))
+        capture("19_search_sections")
+        compose.onNode(hasScrollToNodeAction()).performScrollToNode(hasText(r.questions.first().text.replace("**", ""), substring = true))
+        compose.onNode(hasText(r.questions.first().text.replace("**", ""), substring = true)).performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Pytanie").assertExists()
+        capture("20_question_view")
     }
 
     @Test fun examMenu() { show(vm(), Routes.EXAM_MENU); capture("17_exam_menu") }

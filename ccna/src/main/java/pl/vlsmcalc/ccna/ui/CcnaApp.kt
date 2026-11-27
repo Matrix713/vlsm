@@ -14,7 +14,9 @@ object Routes {
     const val HOME = "home"
     const val DOMAINS = "domains"
     const val DOMAIN = "domain/{id}"
-    const val TOPIC = "topic/{id}"
+    const val TOPIC = "topic/{id}?s={s}&h={h}"
+    const val CARD = "card?id={id}"
+    const val QUESTION = "question?id={id}"
     const val FLASH_MENU = "flash_menu"
     const val FLASH = "flash"
     const val QUIZ_MENU = "quiz_menu"
@@ -27,7 +29,10 @@ object Routes {
     const val ABOUT = "about"
 
     fun domain(id: Int) = "domain/$id"
-    fun topic(id: String) = "topic/$id"
+    fun topic(id: String, section: Int = -1, highlight: String = "") =
+        "topic/$id?s=$section&h=${android.net.Uri.encode(highlight)}"
+    fun card(id: String) = "card?id=${android.net.Uri.encode(id)}"
+    fun question(id: String) = "question?id=${android.net.Uri.encode(id)}"
 }
 
 @Composable
@@ -40,8 +45,22 @@ fun CcnaApp(vm: CcnaViewModel = viewModel(), startDestination: String = Routes.H
             composable(Routes.DOMAIN, arguments = listOf(navArgument("id") { type = NavType.IntType })) {
                 DomainScreen(vm, nav, it.arguments?.getInt("id") ?: 1)
             }
-            composable(Routes.TOPIC, arguments = listOf(navArgument("id") { type = NavType.StringType })) {
-                TopicScreen(vm, nav, it.arguments?.getString("id").orEmpty())
+            composable(
+                Routes.TOPIC,
+                arguments = listOf(
+                    navArgument("id") { type = NavType.StringType },
+                    navArgument("s") { type = NavType.IntType; defaultValue = -1 },
+                    navArgument("h") { type = NavType.StringType; defaultValue = "" },
+                ),
+            ) {
+                val a = it.arguments
+                TopicScreen(vm, nav, a?.getString("id").orEmpty(), a?.getInt("s") ?: -1, a?.getString("h").orEmpty())
+            }
+            composable(Routes.CARD, arguments = listOf(navArgument("id") { type = NavType.StringType; defaultValue = "" })) {
+                CardViewScreen(vm, nav, it.arguments?.getString("id").orEmpty())
+            }
+            composable(Routes.QUESTION, arguments = listOf(navArgument("id") { type = NavType.StringType; defaultValue = "" })) {
+                QuestionViewScreen(vm, nav, it.arguments?.getString("id").orEmpty())
             }
             composable(Routes.FLASH_MENU) { FlashMenuScreen(vm, nav) }
             composable(Routes.FLASH) { FlashScreen(vm, nav) }

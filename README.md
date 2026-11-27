@@ -133,7 +133,9 @@ Materiał według programu **CCNA 200-301 v1.1**, po polsku, offline:
 - **Fiszki** – ponad 300, powtórki metodą Leitnera (najsłabiej znane najpierw).
 - **Quiz** – ponad 240 pytań z wyjaśnieniami, także wielokrotnego wyboru; „Powtórz błędy”.
 - **Egzamin próbny** – 20/40/60 pytań losowanych według wag obszarów, wynik per obszar i przegląd błędów.
-- **Postęp i gotowość**, wyszukiwarka w teorii.
+- **Wyszukiwarka** – przeszukuje teorię, fiszki i pytania naraz (bez względu na polskie znaki), z podpowiedziami
+  i historią (bez pisania), podświetla trafienia i otwiera temat od razu w pasującej sekcji.
+- **Postęp i gotowość** – stan każdego obszaru i historia egzaminów.
 
 Treść jest w zwykłych plikach tekstowych (`ccna/src/main/assets/ccna/*.txt`) – łatwo ją poprawiać i
 rozszerzać; testy pilnują poprawności formatu (np. czy pytanie „wybierz dwie” ma dwie poprawne odpowiedzi).

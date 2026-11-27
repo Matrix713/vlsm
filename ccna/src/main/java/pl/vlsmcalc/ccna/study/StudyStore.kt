@@ -24,6 +24,7 @@ class StudyStore(context: Context) {
         put("stats", JSONObject().apply {
             p.stats.forEach { (k, s) -> put(k, JSONArray().put(s.attempts).put(s.correct).put(s.lastCorrect)) }
         })
+        put("recent", JSONArray(p.recentSearches))
         put("exams", JSONArray().apply {
             p.exams.forEach { put(JSONArray().put(it.at).put(it.total).put(it.correct)) }
         })
@@ -44,7 +45,8 @@ class StudyStore(context: Context) {
                 ExamRecord(e.getLong(0), e.getInt(1), e.getInt(2))
             }
         } ?: emptyList()
-        return Progress(read, boxes, stats, exams)
+        val recent = o.optJSONArray("recent")?.let { a -> (0 until a.length()).map { a.getString(it) } } ?: emptyList()
+        return Progress(read, boxes, stats, exams, recent)
     }
 
     private companion object {

@@ -10,13 +10,13 @@ import pl.vlsmcalc.ccna.content.ContentParser
 import pl.vlsmcalc.ccna.content.Library
 import pl.vlsmcalc.ccna.content.Question
 import pl.vlsmcalc.ccna.content.Topic
-import pl.vlsmcalc.ccna.content.plain
+import pl.vlsmcalc.ccna.content.SearchIndex
+import pl.vlsmcalc.ccna.content.SearchResults
 import pl.vlsmcalc.ccna.study.ExamRecord
 import pl.vlsmcalc.ccna.study.Presented
 import pl.vlsmcalc.ccna.study.Progress
 import pl.vlsmcalc.ccna.study.Study
 import pl.vlsmcalc.ccna.study.StudyStore
-import java.text.Normalizer
 import kotlin.random.Random
 
 /** Zakres materiału dla fiszek i quizów. */
@@ -65,8 +65,6 @@ data class QuizResult(
 ) {
     val percent: Int get() = if (total == 0) 0 else correct * 100 / total
 }
-
-data class SearchHit(val topic: Topic, val snippet: String)
 
 class CcnaViewModel(app: Application) : AndroidViewModel(app) {
     private val store = StudyStore(app)
@@ -249,23 +247,24 @@ class CcnaViewModel(app: Application) : AndroidViewModel(app) {
 
     fun readiness(): Int = Study.readiness(library, progress)
 
-    fun resetProgress() = update { Progress() }
+    fun resetProgress() = update { Progress(recentSearches = recentSearches) }
 
     // ---------- Wyszukiwanie ----------
 
-    fun search(query: String): List<SearchHit> {
-        val q = normalize(query.trim())
-        if (q.length < 2) return emptyList()
-        return library.topics.mapNotNull { t ->
-            val lines = t.sections.flatMap { s -> listOf(s.title) + s.lines.map { it.text } } +
-                t.cards.map { "${it.front} ${it.back}" }
-            when {
-                normalize(t.title).contains(q) -> SearchHit(t, t.sections.firstOrNull()?.lines?.firstOrNull()?.text?.plain().orEmpty())
-                else -> lines.firstOrNull { normalize(it).contains(q) }?.let { SearchHit(t, it.plain()) }
-            }
-        }.take(40)
+    private val searchIndex by lazy { SearchIndex(library) }
+
+    /** Wyniki dla bieżącego zapytania (teoria, fiszki, pytania). */
+    fun results(query: String = searchQuery): SearchResults = searchIndex.search(query)
+
+    /** Ustawia zapytanie i zapamiętuje je w historii. */
+    fun runSearch(query: String) {
+        val q = query.trim()
+        searchQuery = q
+        if (q.isEmpty()) return
+        update { copy(recentSearches = (listOf(q) + recentSearches.filter { !it.equals(q, ignoreCase = true) }).take(8)) }
     }
 
-    private fun normalize(s: String): String =
-        Normalizer.normalize(s.lowercase().replace('ł', 'l'), Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "").replace("**", "")
+    fun clearRecentSearches() = update { copy(recentSearches = emptyList()) }
+
+    fun card(id: String): Card? = library.cards.firstOrNull { it.id == id }
 }

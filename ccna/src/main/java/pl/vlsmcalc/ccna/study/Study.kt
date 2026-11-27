@@ -18,6 +18,8 @@ data class Progress(
     val boxes: Map<String, Int> = emptyMap(),
     val stats: Map<String, QStat> = emptyMap(),
     val exams: List<ExamRecord> = emptyList(),
+    /** Ostatnie wyszukiwania (najnowsze pierwsze). */
+    val recentSearches: List<String> = emptyList(),
 )
 
 /** Pytanie z wymieszaną kolejnością odpowiedzi. [order] – indeksy oryginalnych odpowiedzi w kolejności wyświetlania. */
